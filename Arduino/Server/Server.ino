@@ -4,6 +4,12 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
+IPAddress ip(192, 168, 0, 180);
+IPAddress gateway(192, 168, 0, 1);
+IPAddress subnet(255, 255, 255, 0);
+IPAddress dns(192, 168, 0, 1);
+
+#define led1 14
 
 const char* ssid     = "embarcados";
 const char* password = "embarcados";
@@ -24,6 +30,11 @@ void setup()
     Serial.begin(115200);
     pinMode(5, OUTPUT); 
     pinMode(rele, OUTPUT);
+
+ 
+    pinMode(led1, OUTPUT);
+//    digitalWrite(14,0); //inverter valor rele
+    
     sensors.begin();
     
     delay(10);
@@ -35,6 +46,7 @@ void setup()
     Serial.print("Connecting to ");
     Serial.println(ssid);
 
+    WiFi.config(ip, dns, gateway, subnet);
     WiFi.begin(ssid, password);
 
     while (WiFi.status() != WL_CONNECTED) {
@@ -58,81 +70,64 @@ void loop(){
 
   if (client) {                             // if you get a client,
     Serial.println("New Client.");           // print a message out the serial port
-    String currentLine = "";                // make a String to hold incoming data from the client
-    while (client.connected()) {            // loop while the client's connected
-      if (client.available()) {             // if there's bytes to read from the client,
-        char c = client.read();             // read a byte, then
-        Serial.write(c);                    // print it out the serial monitor
-        
-        String req = client.readStringUntil('\r');
-        Serial.print(req);
-        client.flush();
+      
+      int luminosidade = 100;
 
-        String inChar = Serial.readStringUntil('.');
-        Serial.println(inChar);
-        
 
-        
-//        if (c == '\n') {                    // if the byte is a newline character
 
-          // if the current line is blank, you got two newline characters in a row.
-          // that's the end of the client HTTP request, so send a response:
-//          if (currentLine.length() == 0) {
-            // HTTP headers always start with a response code (e.g. HTTP/1.1 200 OK)
-            // and a content-type so the client knows what's coming, then a blank line:
-//            client.println("HTTP/1.1 200 OK");
-//            client.println("Content-type:text/html");
-//            client.println();
-//
-//            // the content of the HTTP response follows the header:
-//            client.print("Click <a href=\"/H\">here</a> to turn the LED on pin 5 on.<br>");
-//            client.print("Click <a href=\"/L\">here</a> to turn the LED on pin 5 off.<br>");
-//
-//            // The HTTP response ends with another blank line:
-//            client.println();
-            // break out of the while loop:
-//            break;
-//          } else {    // if you got a newline, then clear currentLine:
-//            currentLine = "";
-//          }
-//        } else if (c != '\r') {  // if you got anything else but a carriage return character,
-//          currentLine += c;      // add it to the end of the currentLine
-//        }
+      
+        String request = client.readStringUntil('\r');
+        Serial.println(request);
+//        client.flush();
+         
+         // analisar os dados que chegaram
+          client.println("HTTP/1.1 200 OK");
+          client.println("Content-type:text/html");
+          client.println(); 
+          
+        if (request.indexOf(F("led1")) != -1) {
+          digitalWrite(led1, !digitalRead(led1));
+          Serial.println("LED 1 Chegou");     
+          client.println("LED1");   
+        } 
 
-        // Check to see if the client request was "GET /H" or "GET /L":
-//        if (currentLine.endsWith("GET /H")) {
-          if(inChar == "a") {
-          digitalWrite(5, HIGH);               // GET /H turns the LED on
-          Serial.println("LED High.");
-        }
-       // if (currentLine.endsWith("GET /L")) {
-        if(inChar == "b") {
-          digitalWrite(5, LOW);                // GET /L turns the LED off
-          Serial.println("LED LOW.");
-        }
-      }
+
+          client.println("Oi");
+
+
+               
+//       while (client.available()) {
+//      // byte by byte is not very efficient
+//      client.read();
+//      }
+
+
+
+    
+
+
+    // The client will actually be *flushed* then disconnected
+    // when the function returns and 'client' object is destroyed (out-of-scope)
+    // flush = ensure written data are received by the other side
+    Serial.println(F("Disconnecting from client"));
+  
     }
-    // close the connection:
-    client.stop();
-    Serial.println("Client Disconnected.");
 
-
-  }
-  digitalWrite(rele, HIGH);
-  delay(5000);
-  Serial.println("LIGOU RELE");
-  digitalWrite(rele, LOW);
-  delay(5000);
-  Serial.println("DESLIGOU RELE");
-
-
-  sensors.requestTemperatures(); 
-  float temperatureC = sensors.getTempCByIndex(0);
-  float temperatureF = sensors.getTempFByIndex(0);
-  Serial.print(temperatureC);
-  Serial.println("ºC");
-  Serial.print(temperatureF);
-  Serial.println("ºF");
-  delay(5000);
+//  digitalWrite(rele, HIGH);
+//  delay(5000);
+//  Serial.println("LIGOU RELE");
+//  digitalWrite(rele, LOW);
+//  delay(5000);
+//  Serial.println("DESLIGOU RELE");
+//
+//
+//  sensors.requestTemperatures(); 
+//  float temperatureC = sensors.getTempCByIndex(0);
+//  float temperatureF = sensors.getTempFByIndex(0);
+//  Serial.print(temperatureC);
+//  Serial.println("ºC");
+//  Serial.print(temperatureF);
+//  Serial.println("ºF");
+//  delay(5000);
   
 }

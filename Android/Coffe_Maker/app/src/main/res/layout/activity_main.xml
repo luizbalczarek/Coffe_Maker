@@ -29,4 +29,12 @@
         android:layout_height="wrap_content"
         android:enabled="false"/>
 
+    <Button
+        android:id="@+id/button2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Fazer Café"
+        android:onClick="irTelaPreparo"/>
+
+
 </LinearLayout>

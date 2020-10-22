@@ -3,6 +3,7 @@ package com.example.coffe_maker;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
@@ -21,6 +22,10 @@ public class MainActivity extends AppCompatActivity {
     TextView txtOi;
     EditText txtResul;
 
+    public void irTelaPreparo(View view){
+        Intent intent1 = new Intent(getApplicationContext(), Ajustes.class );
+        startActivity(intent1);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

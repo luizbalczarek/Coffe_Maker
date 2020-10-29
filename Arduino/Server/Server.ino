@@ -10,6 +10,11 @@
 #include <DallasTemperature.h>
 #include <RTClib.h>
 #include "menu1.h"
+#include "menu2.h"
+#include "menu3.h"
+#include "menu4.h"
+#include "menu5.h"
+
 #include <TJpg_Decoder.h>
 
 #define USE_DMA
@@ -26,11 +31,11 @@
 
 RTC_DS3231 rtc;
 char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
-String timeChar;
+String timeChar, timeChar2;
 char dateChar[50];
 char temperatureChar[10];
 String dateString;
-int minuteNow=0;
+int minuteNow=0, minuteNow2=0, horaNow=0;
 int minutePrevious=0;
 
 TFT_eSPI tft = TFT_eSPI();       // Invoke custom library
@@ -60,8 +65,9 @@ const char* password = "embarcados";
 
 uint8_t rec_value= 0;
 String inChar;
-int i, hs, mi;
-int rele = 25;
+int i, hs, mi, quantidade;
+int releRes = 25, releAgua= 33;
+
 
 const int oneWireBus = 27;  // GPIO where the DS18B20 is connected to
 OneWire oneWire(oneWireBus); // Setup a oneWire instance to communicate with any OneWire devices
@@ -150,8 +156,9 @@ void setup(void)
   TJpgDec.setCallback(tft_output);
   
     pinMode(32, OUTPUT); 
-    pinMode(rele, OUTPUT);
-
+    
+    pinMode(releRes, OUTPUT);
+    pinMode(releAgua, OUTPUT);
  
     pinMode(led1, OUTPUT);
 //    digitalWrite(14,0); //inverter valor rele
@@ -207,41 +214,169 @@ int statusMenu = 1;
 
 void loop()
 {
-  uint16_t x, y;
+  uint16_t x, y, z;
   WiFiClient client = server.available();   // listen for incoming clients
   DateTime now = rtc.now();
-  
-
-              minuteNow = now.minute();
-            if(minuteNow!=minutePrevious)
-            {
-//              dateString = daysOfTheWeek[now.dayOfTheWeek()]+", ";
-//              dateString = dateString+String(now.day())+"/"+String(now.month());
-//              dateString= dateString+"/"+ String(now.year()); 
-              minutePrevious = minuteNow;
-              String hours= "";
-              if(now.hour()<10)
-              {
-                 hours = hours+"0"+String(now.hour());
-                }
-              if(now.minute()<10)
-              {
-                hours = hours+":0"+String(now.minute());
-              }else
-              {
-                hours = hours+":"+String(now.minute());
-              }
+  minuteNow = now.minute();
               
+  tft.getTouchRaw(&x, &y);
+  z = tft.getTouchRawZ();
+  Serial.printf("x: %i     ", x);
+  Serial.printf("y: %i     ", y);
+  Serial.printf("z: %i     ", z);
 
-              timeChar = hours;
-//              hours.toCharArray(timeChar);
-              Serial.println(timeChar);
-         //     tft.fillRect(10,0,160,65,ST7735_BLACK);
-         //     printText(timeChar, ST7735_WHITE,20,25,3);
-         //     dateString.toCharArray(dateChar,50);
-         //     printText(dateChar, ST7735_GREEN,8,5,1);
-         mainMenu();
-            }
+  
+  Serial.println();
+  delay(10);
+
+//  Serial.println(statusMenu);
+
+    if((minuteNow!=minutePrevious) || (z > 300 ))
+      {
+       if (statusMenu == 1){
+          mainMenu();
+           if ((x > 2320) && (x < 3450))
+                    
+                { 
+                  if ((y > 840) && (y <1700)) 
+                  {  
+                    Serial.println("Fazer Café");
+                    mainMenu2();
+                  }
+                 }else if ((x > 520) && (x < 1620))
+                             
+                           {
+                            if ((y > 2730) && (y <3550) && (z > 400)) 
+                            {  
+                                Serial.println("Agendamentos");
+                                mainMenu5();
+                            }  
+                            if ((y > 820) && (y <1710)) 
+                                     {  
+                                     Serial.println("programar");
+
+                                      DateTime now = rtc.now();
+                                      minuteNow2 = now.minute();
+                                      horaNow = now.hour();
+          
+                                      mainMenu4(minuteNow2, horaNow);
+                                      statusMenu = 4; 
+                                         }
+                                      }
+                 
+        }else if(statusMenu == 2){
+          mainMenu2();
+                  if ((x > 3400) && (x < 3675))
+                  { 
+                  if ((y > 440) && (y <680)) 
+                  {  
+                    Serial.println("Home");
+                    mainMenu();
+                  }
+          
+
+                  }else if ((x > 2100) && (x <3550)&& (z > 400)) //quantidade
+                                                                { if ((y > 2500) && (y <3800)) {  
+                                                                                                      quantidade = 200;
+                                                                                                      mainMenu3();
+                                                                                               }
+                          
+                                                                 if ((y > 850) && (y <2200)) {  
+                                                                                                    quantidade = 400;
+                                                                                                    mainMenu3();
+                                                                }
+                                                                
+                                                                }else if ((x > 0) && (x <1750)&& (z > 400)) //verifica quantidade
+                                                                                                            { if ((y > 2470) && (y <3800)) 
+                                                                                                                                          {  
+                                                                                                                                           quantidade = 600;
+                                                                                                                                           mainMenu3();
+                                                                                                             } if ((y > 850) && (y <2180)) //quantidade
+                                                                                                                                   {
+                                                                                                                                    quantidade = 800;
+                                                                                                                                    mainMenu3();
+                                                                                                                                    }
+                                                               }
+              Serial.println(quantidade);            
+                  
+       }else if(statusMenu == 3){
+          mainMenu3();
+          
+       }else if(statusMenu == 4){
+                  
+                  if ((x > 2050) && (x <2500)&& (z > 400)) //verifica o hora ou minuto +
+                  {  
+                      if ((y > 3030) && (y <3330)) //verifica o hora +
+                      {  
+                        if (horaNow < 23){
+                          horaNow = horaNow+1;
+                        }else   {
+                              horaNow = 00;
+                          }
+                          
+                          }else if ((y > 2000) && (y <2320)) //verifica o minuto +
+                          {  
+                             if (minuteNow2 < 59){
+                              minuteNow2 = minuteNow2+1;
+                             }else
+                              {
+                                minuteNow2 = 00;
+                            }
+                          
+                          }
+                      }else if ((x > 0) && (x <690)&& (z > 400)) //verifica o hora ou minuto -
+                  {  
+                      if ((y > 3030) && (y <3330)) //verifica o hora -
+                      {  
+                        if (horaNow > 0){
+                          horaNow = horaNow-1;
+                        }else   {
+                              horaNow = 23;
+                          }
+                          
+                          }else if ((y > 2000) && (y <2320)) //verifica o minuto -
+                          {  
+                             if (minuteNow2 > 0){
+                              minuteNow2 = minuteNow2-1;
+                             }else
+                              {
+                                minuteNow2 = 59;
+                            }
+                          
+                          }
+                      }else if ((x > 3400) && (x < 3675)&& (z > 400))
+                  { 
+                    if ((y > 440) && (y <680)) 
+                    {  
+                     Serial.println("Home 1");
+                     statusMenu = 1;
+                     mainMenu();
+//                     Serial.println(statusMenu);
+                    }
+                  }
+
+                  mainMenu4(minuteNow2, horaNow);
+
+
+
+                  
+       }else if(statusMenu == 5)
+       {
+         mainMenu5();
+                           if ((x > 3400) && (x < 3675))
+                  { 
+                  if ((y > 440) && (y <680)) 
+                  {  
+                    Serial.println("Home");
+                    statusMenu = 1;
+                    mainMenu();
+                  }
+                  }
+       }
+       }
+
+  
+ 
             
            
           
@@ -311,30 +446,19 @@ void loop()
 
 
 //
-//  tft.getTouchRaw(&x, &y);
-//  
-//  Serial.printf("x: %i     ", x);
-//
-//  Serial.printf("y: %i     ", y);
-//  Serial.println();
 
   
-//  if (tft.getTouch(&x, &y))
+//   if (tft.getTouch(&x, &y))
 //  {
-//    // Draw a block spot to show where touch was calculated to be
+    // Draw a block spot to show where touch was calculated to be
 //    #ifdef BLACK_SPOT
 //      tft.fillCircle(x, y, 2, TFT_BLACK);
 //    #endif
-//    
-//    if (SwitchOn)
-//    {
-//      if ((x > REDBUTTON_X) && (x < (REDBUTTON_X + REDBUTTON_W))) {
-//        if ((y > REDBUTTON_Y) && (y <= (REDBUTTON_Y + REDBUTTON_H))) {
-//          Serial.println("Red btn hit");
-//          mainMenu();
-//        }
-//      }
-//    }
+    
+
+
+  
+
 //    else //Record is off (SwitchOn == false)
 //    {
 //      if ((x > GREENBUTTON_X) && (x < (GREENBUTTON_X + GREENBUTTON_W))) {
@@ -421,16 +545,51 @@ void drawFrame()
   tft.drawRect(FRAME_X, FRAME_Y, FRAME_W, FRAME_H, TFT_BLACK);
 }
 
+
 // Draw a red button
 void mainMenu()
 {
-
+  statusMenu = 1;
   uint16_t w = 0, h = 0;
-  TJpgDec.getJpgSize(&w, &h, menu1, sizeof(menu1));
-//  Serial.print("Width = "); Serial.print(w); Serial.print(", height = "); Serial.println(h);
+  uint16_t x, y;
+              
+              DateTime now = rtc.now();
+              minuteNow = now.minute();
+              if(minuteNow!=minutePrevious)
+            {
+//              dateString = daysOfTheWeek[now.dayOfTheWeek()]+", ";
+//              dateString = dateString+String(now.day())+"/"+String(now.month());
+//              dateString= dateString+"/"+ String(now.year()); 
+              minutePrevious = minuteNow;
+              String hours= "";
+              if(now.hour()<10)
+              {
+                 hours = hours+"0"+String(now.hour());
+                }else
+              {
+                hours = hours+""+String(now.hour());
+              }
+              if(now.minute()<10)
+              {
+                hours = hours+":0"+String(now.minute());
+              }else
+              {
+                hours = hours+":"+String(now.minute());
+              }
+              
 
-  // Time recorded for test purposes
-  uint32_t dt = millis();
+              timeChar = hours;
+//              hours.toCharArray(timeChar);
+              Serial.println(timeChar);
+
+         //     tft.fillRect(10,0,160,65,ST7735_BLACK);
+         //     printText(timeChar, ST7735_WHITE,20,25,3);
+         //     dateString.toCharArray(dateChar,50);
+         //     printText(dateChar, ST7735_GREEN,8,5,1);
+
+            }
+  
+  TJpgDec.getJpgSize(&w, &h, menu1, sizeof(menu1));
 
   // Must use startWrite first so TFT chip select stays low during DMA and SPI channel settings remain configured
   tft.startWrite();
@@ -440,45 +599,126 @@ void mainMenu()
 
   // Must use endWrite to release the TFT chip select and release the SPI channel
   tft.endWrite();
-  
-  tft.setTextColor(TFT_BLACK);
 
-  tft.setTextSize(3);
-  tft.drawString(timeChar,30,55);
-  //tft.drawNumber(hs ,20, 30,6);
-  //tft.drawChar(':',30,30, 2 );
-  //tft.drawNumber(mi ,40,25,6);
-  
-//  tft.fillRoundRect(170, 25, 140, 40,10, 0x03EF);
-//  tft.fillRoundRect(170, 100, 140, 40,10, 0x03EF);
-//  tft.fillRoundRect(170, 175, 140, 40,10, 0x03EF);
-//  tft.fillCircle(80,120 , 80, 0x000F);
-//  tft.setTextColor(TFT_WHITE);
-//  tft.setFreeFont(FF5);
-//  //tft.setTextSize(1,5);
-//  tft.drawString("Fazer Cafe", 180, 35);
-//  tft.drawString("Agendar Cafe", 175, 110);
-//  tft.drawString("Agendamentos", 175, 185);
-//
-//  tft.drawNumber(hs ,0, 0,4);
-//  tft.drawChar(':',10,0, 4 );
-//  tft.drawNumber(mi ,20 ,20,4);
-//
-//
-//  
-//
-//  SwitchOn = false;
+ tft.setTextColor(TFT_BLACK);
+ tft.setTextSize(3);
+ tft.drawString(timeChar,30,55); 
 }
 
-// Draw a green button
-void greenBtn()
+
+void mainMenu2()
 {
-  tft.fillRect(GREENBUTTON_X, GREENBUTTON_Y, GREENBUTTON_W, GREENBUTTON_H, TFT_GREEN);
-  tft.fillRect(REDBUTTON_X, REDBUTTON_Y, REDBUTTON_W, REDBUTTON_H, TFT_DARKGREY);
-  drawFrame();
-  tft.setTextColor(TFT_WHITE);
-  tft.setTextSize(2);
-  tft.setTextDatum(MC_DATUM);
-  tft.drawString("OFF", REDBUTTON_X + (REDBUTTON_W / 2) + 1, REDBUTTON_Y + (REDBUTTON_H / 2));
-  SwitchOn = true;
+
+  statusMenu = 2;
+  uint16_t w = 0, h = 0;
+  TJpgDec.getJpgSize(&w, &h, menu2, sizeof(menu2));
+
+  // Must use startWrite first so TFT chip select stays low during DMA and SPI channel settings remain configured
+  tft.startWrite();
+
+  // Draw the image, top left at 0,0 - DMA request is handled in the call-back tft_output() in this sketch
+  TJpgDec.drawJpg(0, 0, menu2, sizeof(menu2));
+
+  // Must use endWrite to release the TFT chip select and release the SPI channel
+    tft.endWrite();
+}
+
+
+void  mainMenu3()
+{
+
+  uint16_t w = 0, h = 0;
+  statusMenu = 3;
+  TJpgDec.getJpgSize(&w, &h, menu3, sizeof(menu3));
+
+  // Must use startWrite first so TFT chip select stays low during DMA and SPI channel settings remain configured
+  tft.startWrite();
+
+  // Draw the image, top left at 0,0 - DMA request is handled in the call-back tft_output() in this sketch
+  TJpgDec.drawJpg(0, 0, menu3, sizeof(menu3));
+
+  // Must use endWrite to release the TFT chip select and release the SPI channel
+  tft.endWrite();
+
+}
+
+void  mainMenu4(int minn, int horan)
+{
+
+  uint16_t w = 0, h = 0, z= 0;
+//  statusMenu = 4;
+  
+              String agenda= "";
+              if(horan<10)
+              {
+                 agenda = agenda+"0"+String(horan);
+                }else
+              {
+                agenda = agenda+""+String(horan);
+              }
+              if(minn<10)
+              {
+                agenda = agenda+":0"+String(minn);
+              }else
+              {
+                agenda = agenda+":"+String(minn);
+              }
+              timeChar2 = agenda;
+
+              
+  TJpgDec.getJpgSize(&w, &h, menu4, sizeof(menu4));
+
+  // Must use startWrite first so TFT chip select stays low during DMA and SPI channel settings remain configured
+  tft.startWrite();
+
+  // Draw the image, top left at 0,0 - DMA request is handled in the call-back tft_output() in this sketch
+  TJpgDec.drawJpg(0, 0, menu4, sizeof(menu4));
+
+  // Must use endWrite to release the TFT chip select and release the SPI channel
+  tft.endWrite();
+
+   tft.setTextColor(TFT_BLACK);
+   tft.setTextSize(4);
+   tft.drawString(timeChar2,60,150);
+
+   
+
+
+}
+
+
+void  mainMenu5()
+{
+
+  uint16_t w = 0, h = 0;
+  statusMenu = 5;
+  TJpgDec.getJpgSize(&w, &h, menu5, sizeof(menu5));
+
+  // Must use startWrite first so TFT chip select stays low during DMA and SPI channel settings remain configured
+  tft.startWrite();
+
+  // Draw the image, top left at 0,0 - DMA request is handled in the call-back tft_output() in this sketch
+  TJpgDec.drawJpg(0, 0, menu5, sizeof(menu5));
+
+  // Must use endWrite to release the TFT chip select and release the SPI channel
+  tft.endWrite();
+
+}
+
+void  preparaCafe()
+{
+
+  digitalWrite(releRes,0); //Liga Resistencia
+  delay(1000); //aguarda x Seg
+  digitalWrite(releAgua,0); //Liga Aguá
+
+  if(temperatura > 80){
+    
+    
+    }
+  
+  
+  
+  
+}
 }

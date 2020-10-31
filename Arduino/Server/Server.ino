@@ -1,6 +1,6 @@
-
+#include "Arduino.h"
 #include <FS.h>
-//#include "Free_Fonts.h" 
+#include "Free_Fonts.h" 
 #include <SPI.h>
 #include <TFT_eSPI.h> // Hardware-specific library
 #include <stdio.h>
@@ -14,6 +14,7 @@
 #include "menu3.h"
 #include "menu4.h"
 #include "menu5.h"
+#include "menu6.h"
 
 #include <TJpg_Decoder.h>
 
@@ -30,13 +31,14 @@
 
 
 RTC_DS3231 rtc;
-char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+char daysOfTheWeek[7][12] = {"Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"};
 String timeChar, timeChar2;
 char dateChar[50];
 char temperatureChar[10];
 String dateString;
 int minuteNow=0, minuteNow2=0, horaNow=0;
 int minutePrevious=0;
+int tempo;
 
 TFT_eSPI tft = TFT_eSPI();       // Invoke custom library
 
@@ -56,7 +58,7 @@ IPAddress dns(192, 168, 0, 1);
 
 #define led1 14 
 
-boolean SwitchOn = false;
+//boolean SwitchOn = false;
 
 const char* ssid     = "embarcados";
 const char* password = "embarcados";
@@ -110,24 +112,40 @@ bool tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap)
 
 // Comment out to stop drawing black spots
 #define BLACK_SPOT
+//
+//// Switch position and size
+//#define FRAME_X 100
+//#define FRAME_Y 64
+//#define FRAME_W 120
+//#define FRAME_H 50
+//
+//// Red zone size
+//#define REDBUTTON_X FRAME_X
+//#define REDBUTTON_Y FRAME_Y
+//#define REDBUTTON_W (FRAME_W/2)
+//#define REDBUTTON_H FRAME_H
+//
+//// Green zone size
+//#define GREENBUTTON_X (REDBUTTON_X + REDBUTTON_W)
+//#define GREENBUTTON_Y FRAME_Y
+//#define GREENBUTTON_W (FRAME_W/2)
+//#define GREENBUTTON_H FRAME_H
+#define MAX 3
 
-// Switch position and size
-#define FRAME_X 100
-#define FRAME_Y 64
-#define FRAME_W 120
-#define FRAME_H 50
+struct Agendamentos{
+            uint8_t  diasAgenda;
+            uint8_t  horaAgenda;
+            uint8_t  minutoAgenda;
+            int  quantidadeAgenda;
+            int tempoAgenda;
+            
+};
 
-// Red zone size
-#define REDBUTTON_X FRAME_X
-#define REDBUTTON_Y FRAME_Y
-#define REDBUTTON_W (FRAME_W/2)
-#define REDBUTTON_H FRAME_H
+String d1, d2, d3;
+String h1, h2, h3;
+String q1, q2, q3;
 
-// Green zone size
-#define GREENBUTTON_X (REDBUTTON_X + REDBUTTON_W)
-#define GREENBUTTON_Y FRAME_Y
-#define GREENBUTTON_W (FRAME_W/2)
-#define GREENBUTTON_H FRAME_H
+struct Agendamentos a1, a2, a3;
 
 //------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------
@@ -138,6 +156,10 @@ void setup(void)
   tft.setRotation(1);  // call screen calibration
   touch_calibrate();
 
+  a1.diasAgenda = 0;
+  a2.diasAgenda = 0;
+  a3.diasAgenda = 0;
+  
   // clear screen
   tft.fillScreen(0x0000);
 
@@ -154,7 +176,9 @@ void setup(void)
 
   // The decoder must be given the exact name of the rendering function above
   TJpgDec.setCallback(tft_output);
-  
+
+
+    
     pinMode(32, OUTPUT); 
     
     pinMode(releRes, OUTPUT);
@@ -211,6 +235,11 @@ void setup(void)
 //------------------------------------------------------------------------------------------
 int value = 0;
 int statusMenu = 1;
+uint8_t  diasTemp;
+uint8_t  horaTemp;
+uint8_t  minutoTemp;
+int  quantidadeTemp;
+int tempoTemp;
 
 void loop()
 {
@@ -226,157 +255,291 @@ void loop()
   Serial.printf("z: %i     ", z);
 
   
-  Serial.println();
+  Serial.println(statusMenu);
   delay(10);
 
 //  Serial.println(statusMenu);
 
-    if((minuteNow!=minutePrevious) || (z > 300 ))
-      {
-       if (statusMenu == 1){
-          mainMenu();
-           if ((x > 2320) && (x < 3450))
-                    
-                { 
-                  if ((y > 840) && (y <1700)) 
-                  {  
-                    Serial.println("Fazer Café");
-                    mainMenu2();
-                  }
-                 }else if ((x > 520) && (x < 1620))
-                             
-                           {
-                            if ((y > 2730) && (y <3550) && (z > 400)) 
-                            {  
-                                Serial.println("Agendamentos");
-                                mainMenu5();
-                            }  
-                            if ((y > 820) && (y <1710)) 
-                                     {  
-                                     Serial.println("programar");
 
-                                      DateTime now = rtc.now();
-                                      minuteNow2 = now.minute();
-                                      horaNow = now.hour();
-          
-                                      mainMenu4(minuteNow2, horaNow);
-                                      statusMenu = 4; 
-                                         }
-                                      }
-                 
-        }else if(statusMenu == 2){
+     if ((minuteNow != minutePrevious) || (z > 300)) {
+      if (statusMenu == 1) {
+        mainMenu();
+        if ((x > 2320) && (x < 3450))
+
+        {
+          if ((y > 840) && (y < 1700)) {
+            Serial.println("Fazer Café");
+             statusMenu = 2;
+            mainMenu2();
+          }
+        } else if ((x > 520) && (x < 1620))
+
+        {
+          if ((y > 2730) && (y < 3550) && (z > 400)) {
+            Serial.println("Agendamentos");
+            mainMenu5(a1, a2, a3);
+          }
+          if ((y > 820) && (y < 1710)) {
+            Serial.println("programar");
+
+            DateTime now = rtc.now();
+            minuteNow2 = now.minute();
+            horaNow = now.hour();
+
+            statusMenu = 4;
+            mainMenu4();
+
+          }
+        }
+
+      } else if (statusMenu == 2) {
+        mainMenu2();
+        if ((x > 3400) && (x < 3675)) {
+          if ((y > 440) && (y < 680)) {
+            Serial.println("Home");
+            statusMenu = 1;
+            mainMenu();
+          }
+
+        } else if ((x > 2100) && (x < 3550) && (z > 400)) //quantidade
+        {
+          if ((y > 2500) && (y < 3800)) {
+            quantidade = 200;
+            tempo = 185;
+            preparaCafe(tempo);
+
+          }
+
+          if ((y > 850) && (y < 2200)) {
+            quantidade = 400;
+            tempo = 370;
+            preparaCafe(tempo);
+            //mainMenu3();
+          }
+
+        } else if ((x > 0) && (x < 1750) && (z > 400)) //verifica quantidade
+        {
+          if ((y > 2470) && (y < 3800)) {
+            quantidade = 600;
+            tempo = 555;
+            preparaCafe(tempo);
+            //mainMenu3();
+          }
+          if ((y > 850) && (y < 2180)) //quantidade
+          {
+            quantidade = 800;
+            tempo = 740;
+            preparaCafe(tempo);
+            //mainMenu3();
+          }
+        }
+        Serial.println(quantidade);
+
+      } else if (statusMenu == 3) {
+        //  mainMenu3();
+
+      } else if (statusMenu == 4) {
+
+        if ((x > 2500) && (x < 3100) && (z > 400)) //quantidade
+        {
+          if ((y > 750) && (y < 3670)) {
+            diasTemp = 5;
+            Serial.println("Dias da Semana");
+            statusMenu = 6;
+            mainMenu6(minuteNow2, horaNow);
+          }
+
+        } else if ((x > 1620) && (x < 2000) && (z > 400)) //quantidade
+        {
+          if ((y > 2640) && (y < 3670)) {
+            diasTemp = 6;
+            Serial.println("Sábado");
+            statusMenu = 6;
+            mainMenu6(minuteNow2, horaNow);
+          } else if ((y > 690) && (y < 1750)) {
+            diasTemp = 7;
+            Serial.println("Domingo");
+            statusMenu = 6;
+            mainMenu6(minuteNow2, horaNow);
+          }
+        } else if ((x > 500) && (x < 1050) && (z > 400)) //quantidade
+        {
+          if ((y > 690) && (y < 3620)) {
+            diasTemp = 8;
+            Serial.println("Finais de Semana");
+            statusMenu = 6;
+            mainMenu6(minuteNow2, horaNow);
+          }
+
+        }
+        if ((x > 3400) && (x < 3675) && (z > 400)) {
+
+          if ((y > 440) && (y < 680)) {
+            Serial.println("Home 1");
+            statusMenu = 1;
+            mainMenu();
+            //                   Serial.println(statusMenu);
+          }
+          mainMenu4();
+        }
+      } else if (statusMenu == 6) {
+
+        if ((x > 2050) && (x < 2500) && (z > 400)) //verifica o hora ou minuto +
+        {
+          if ((y > 3030) && (y < 3330)) //verifica o hora +
+          {
+            if (horaNow < 23) {
+              horaNow = horaNow + 1;
+            } else {
+              horaNow = 00;
+            }
+
+          } else if ((y > 2000) && (y < 2320)) //verifica o minuto +
+          {
+            if (minuteNow2 < 59) {
+              minuteNow2 = minuteNow2 + 1;
+            } else {
+              minuteNow2 = 00;
+            }
+
+          }
+        } else if ((x > 0) && (x < 690) && (z > 400)) //verifica o hora ou minuto -
+        {
+          if ((y > 3030) && (y < 3330)) //verifica o hora -
+          {
+            if (horaNow > 0) {
+              horaNow = horaNow - 1;
+            } else {
+              horaNow = 23;
+            }
+
+          } else if ((y > 2000) && (y < 2320)) //verifica o minuto -
+          {
+            if (minuteNow2 > 0) {
+              minuteNow2 = minuteNow2 - 1;
+            } else {
+              minuteNow2 = 59;
+            }
+
+          }
+        } else if ((x > 3400) && (x < 3675) && (z > 400)) {
+          if ((y > 440) && (y < 680)) {
+            Serial.println("Home 1");
+            statusMenu = 1;
+            mainMenu();
+            //                     Serial.println(statusMenu);
+          }
+
+        } else if ((x > 2620) && (x < 3100) && (z > 400)) {
+          if ((y > 750) && (y < 1616)) {
+            Serial.println("OK");
+            minutoTemp = minuteNow2;
+            horaTemp = horaNow;
+            statusMenu = 7;
+            mainMenu2();
+            //                     Serial.println(statusMenu);
+          }  
+        }
+        mainMenu6(minuteNow2, horaNow);
+      }else if (statusMenu == 5) {
+        if ((minuteNow != minutePrevious) || (z > 300)){
+
+        
+          mainMenu5(a1, a2, a3);
+        }if ((x > 3400) && (x < 3675)) {
+            if ((y > 440) && (y < 680)) {
+              Serial.println("Home");
+              statusMenu = 1;
+              mainMenu();
+            }
+          }else if((y > 490) && (y < 800) && (z > 400)) //verifica quantidade
+          {
+            if ((x > 2410) && (x < 3100)) {
+              
+              a1.diasAgenda = 0;
+              tft.fillScreen(TFT_WHITE);
+              tft.setTextColor(TFT_BLACK);
+              tft.setTextSize(2);
+              tft.drawString("Agendamento excluído",40,120);
+              delay(3000);
+              
+              mainMenu();
+            }else if ((x > 1480) && (x < 2150)) {
+              
+              a2.diasAgenda = 0;
+              tft.fillScreen(TFT_WHITE);
+              tft.setTextColor(TFT_BLACK);
+              tft.setTextSize(2);
+              tft.drawString("Agendamento excluído",40,120);
+              delay(3000);
+              
+              mainMenu();
+            }else if ((x > 500) && (x < 1170)) {
+              
+              a3.diasAgenda = 0;
+              tft.fillScreen(TFT_WHITE);
+              tft.setTextColor(TFT_BLACK);
+              tft.setTextSize(2);
+              tft.drawString("Agendamento excluído",40,120);
+              delay(3000);
+              
+              mainMenu();
+            }
+          }
+
+        } else if (statusMenu == 7) {
           mainMenu2();
-                  if ((x > 3400) && (x < 3675))
-                  { 
-                  if ((y > 440) && (y <680)) 
-                  {  
-                    Serial.println("Home");
-                    mainMenu();
-                  }
-          
+          if ((x > 3400) && (x < 3675)) {
+            if ((y > 440) && (y < 680)) {
+              Serial.println("Home");
+              statusMenu = 1;
+              mainMenu();
+            }
 
-                  }else if ((x > 2100) && (x <3550)&& (z > 400)) //quantidade
-                                                                { if ((y > 2500) && (y <3800)) {  
-                                                                                                      quantidade = 200;
-                                                                                                      mainMenu3();
-                                                                                               }
-                          
-                                                                 if ((y > 850) && (y <2200)) {  
-                                                                                                    quantidade = 400;
-                                                                                                    mainMenu3();
-                                                                }
-                                                                
-                                                                }else if ((x > 0) && (x <1750)&& (z > 400)) //verifica quantidade
-                                                                                                            { if ((y > 2470) && (y <3800)) 
-                                                                                                                                          {  
-                                                                                                                                           quantidade = 600;
-                                                                                                                                           mainMenu3();
-                                                                                                             } if ((y > 850) && (y <2180)) //quantidade
-                                                                                                                                   {
-                                                                                                                                    quantidade = 800;
-                                                                                                                                    mainMenu3();
-                                                                                                                                    }
-                                                               }
-              Serial.println(quantidade);            
-                  
-       }else if(statusMenu == 3){
-          mainMenu3();
-          
-       }else if(statusMenu == 4){
-                  
-                  if ((x > 2050) && (x <2500)&& (z > 400)) //verifica o hora ou minuto +
-                  {  
-                      if ((y > 3030) && (y <3330)) //verifica o hora +
-                      {  
-                        if (horaNow < 23){
-                          horaNow = horaNow+1;
-                        }else   {
-                              horaNow = 00;
-                          }
-                          
-                          }else if ((y > 2000) && (y <2320)) //verifica o minuto +
-                          {  
-                             if (minuteNow2 < 59){
-                              minuteNow2 = minuteNow2+1;
-                             }else
-                              {
-                                minuteNow2 = 00;
-                            }
-                          
-                          }
-                      }else if ((x > 0) && (x <690)&& (z > 400)) //verifica o hora ou minuto -
-                  {  
-                      if ((y > 3030) && (y <3330)) //verifica o hora -
-                      {  
-                        if (horaNow > 0){
-                          horaNow = horaNow-1;
-                        }else   {
-                              horaNow = 23;
-                          }
-                          
-                          }else if ((y > 2000) && (y <2320)) //verifica o minuto -
-                          {  
-                             if (minuteNow2 > 0){
-                              minuteNow2 = minuteNow2-1;
-                             }else
-                              {
-                                minuteNow2 = 59;
-                            }
-                          
-                          }
-                      }else if ((x > 3400) && (x < 3675)&& (z > 400))
-                  { 
-                    if ((y > 440) && (y <680)) 
-                    {  
-                     Serial.println("Home 1");
-                     statusMenu = 1;
-                     mainMenu();
-//                     Serial.println(statusMenu);
-                    }
-                  }
+          } else if ((x > 2100) && (x < 3550) && (z > 400)) //quantidade
+          {
+            if ((y > 2500) && (y < 3800)) {
+              quantidadeTemp = 200;
+              tempoTemp = 185;
+              criaAgendamento(  diasTemp,  horaTemp,  minutoTemp,  quantidadeTemp  , tempoTemp, &a1, &a2, &a3);
+              mainMenu();
 
-                  mainMenu4(minuteNow2, horaNow);
+            }
 
+            if ((y > 850) && (y < 2200)) {
+              quantidadeTemp = 400;
+              tempoTemp = 370;
+              criaAgendamento(  diasTemp,  horaTemp,  minutoTemp,  quantidadeTemp  , tempoTemp, &a1, &a2, &a3);
+              mainMenu();
 
+              //mainMenu3();
+            }
 
-                  
-       }else if(statusMenu == 5)
-       {
-         mainMenu5();
-                           if ((x > 3400) && (x < 3675))
-                  { 
-                  if ((y > 440) && (y <680)) 
-                  {  
-                    Serial.println("Home");
-                    statusMenu = 1;
-                    mainMenu();
-                  }
-                  }
-       }
-       }
+          } else if ((x > 0) && (x < 1750) && (z > 400)) //verifica quantidade
+          {
+            if ((y > 2470) && (y < 3800)) {
+              quantidadeTemp = 600;
+              tempoTemp = 555;
+              criaAgendamento(  diasTemp,  horaTemp,  minutoTemp,  quantidadeTemp  , tempoTemp, &a1, &a2, &a3);
+              mainMenu();
 
-  
- 
+              //mainMenu3();
+            }
+            if ((y > 850) && (y < 2180)) //quantidade
+            {
+              quantidadeTemp = 800;
+              tempoTemp = 740;
+              criaAgendamento(  diasTemp,  horaTemp,  minutoTemp,  quantidadeTemp  , tempoTemp, &a1, &a2, &a3);
+              mainMenu();
+
+              //mainMenu3();
+            }
+          }
+
+        }
+
+      }
+
             
            
           
@@ -540,10 +703,10 @@ void touch_calibrate()
   }
 }
 
-void drawFrame()
-{
-  tft.drawRect(FRAME_X, FRAME_Y, FRAME_W, FRAME_H, TFT_BLACK);
-}
+//void drawFrame()
+//{
+//  tft.drawRect(FRAME_X, FRAME_Y, FRAME_W, FRAME_H, TFT_BLACK);
+//}
 
 
 // Draw a red button
@@ -609,7 +772,7 @@ void mainMenu()
 void mainMenu2()
 {
 
-  statusMenu = 2;
+//  statusMenu = 2;
   uint16_t w = 0, h = 0;
   TJpgDec.getJpgSize(&w, &h, menu2, sizeof(menu2));
 
@@ -624,11 +787,36 @@ void mainMenu2()
 }
 
 
-void  mainMenu3()
+void  mainMenu3(int tmp, float tmpC)
 {
-
+  //String timeRes =  String(tmp); 
+  String timeRes = "";
   uint16_t w = 0, h = 0;
+  int ho, m, s;
   statusMenu = 3;
+
+
+  String tempeC =  String(tmpC)+(char)247+"C";
+  ho = (tmp/3600); 
+  m = (tmp -(3600*ho))/60;
+  s = (tmp -(3600*ho)-(m*60));
+
+  if(m<10)
+              {
+                 timeRes = "0"+String(m);
+              }else
+              {
+                  timeRes = String(m);
+              }
+       if(s<10)
+              {
+                 timeRes = timeRes+":0"+String(s);
+              }else
+              {
+                timeRes =  timeRes+":"+String(s);
+              }
+  
+  
   TJpgDec.getJpgSize(&w, &h, menu3, sizeof(menu3));
 
   // Must use startWrite first so TFT chip select stays low during DMA and SPI channel settings remain configured
@@ -639,14 +827,415 @@ void  mainMenu3()
 
   // Must use endWrite to release the TFT chip select and release the SPI channel
   tft.endWrite();
+     
+   
+   tft.setTextColor(TFT_BLACK);
+   tft.setTextSize(5);
+   tft.drawString(timeRes,35,115);
+   tft.setTextColor(TFT_WHITE);
+   tft.setTextSize(1);
+   tft.drawString(tempeC,115,226);
+   
 
 }
 
-void  mainMenu4(int minn, int horan)
+//void  mainMenu4(struct Agendamentos *a1s, struct Agendamentos *a2s, struct Agendamentos *a3s)
+void  mainMenu4()
 {
 
   uint16_t w = 0, h = 0, z= 0;
 //  statusMenu = 4;
+              
+  TJpgDec.getJpgSize(&w, &h, menu4, sizeof(menu4));
+
+  // Must use startWrite first so TFT chip select stays low during DMA and SPI channel settings remain configured
+  tft.startWrite();
+
+  // Draw the image, top left at 0,0 - DMA request is handled in the call-back tft_output() in this sketch
+  TJpgDec.drawJpg(0, 0, menu4, sizeof(menu4));
+
+  // Must use endWrite to release the TFT chip select and release the SPI channel
+  tft.endWrite();
+  
+            
+
+
+}
+
+void  mainMenu5(struct Agendamentos a1s, struct Agendamentos a2s, struct Agendamentos a3s)
+{
+
+  uint16_t w = 0, h = 0;
+  statusMenu = 5;
+  TJpgDec.getJpgSize(&w, &h, menu5, sizeof(menu5));
+  // Must use startWrite first so TFT chip select stays low during DMA and SPI channel settings remain configured
+  tft.startWrite();
+  // Draw the image, top left at 0,0 - DMA request is handled in the call-back tft_output() in this sketch
+  TJpgDec.drawJpg(0, 0, menu5, sizeof(menu5));
+  // Must use endWrite to release the TFT chip select and release the SPI channel
+  tft.endWrite();
+  
+  if (a1s.diasAgenda == 0 ){
+          tft.setTextColor(TFT_BLACK);
+          tft.setTextSize(2);
+          tft.drawString("Vazio",20,60);
+    } else if (a1s.diasAgenda == 5) {
+              String hoursd= "";
+              if(a1s.horaAgenda<10)
+              {
+                 hoursd = hoursd+"0"+String(a1s.horaAgenda);
+                }else
+              {
+                hoursd = hoursd+""+String(a1s.horaAgenda);
+              }
+              if(a1s.minutoAgenda<10)
+              {
+                hoursd = hoursd+":0"+String(a1s.minutoAgenda);
+              }else
+              {
+                hoursd = hoursd+":"+String(a1s.minutoAgenda);
+              }
+          tft.setTextColor(TFT_BLACK);
+          tft.setTextSize(2);
+          tft.drawString("Dias da Semana",20,60);
+          tft.drawString(hoursd,213,60);
+      
+      }else if (a1s.diasAgenda == 6) {
+              String hoursd= "";
+              if(a1s.horaAgenda<10)
+              {
+                 hoursd = hoursd+"0"+String(a1s.horaAgenda);
+                }else
+              {
+                hoursd = hoursd+""+String(a1s.horaAgenda);
+              }
+              if(a1s.minutoAgenda<10)
+              {
+                hoursd = hoursd+":0"+String(a1s.minutoAgenda);
+              }else
+              {
+                hoursd = hoursd+":"+String(a1s.minutoAgenda);
+              }
+          tft.setTextColor(TFT_BLACK);
+          tft.setTextSize(2);
+          tft.drawString("Sábados",20,60);
+          tft.drawString(hoursd,213,60);
+      
+      }else if (a1s.diasAgenda == 7) {
+              String hoursd= "";
+              if(a1s.horaAgenda<10)
+              {
+                 hoursd = hoursd+"0"+String(a1s.horaAgenda);
+                }else
+              {
+                hoursd = hoursd+""+String(a1s.horaAgenda);
+              }
+              if(a1s.minutoAgenda<10)
+              {
+                hoursd = hoursd+":0"+String(a1s.minutoAgenda);
+              }else
+              {
+                hoursd = hoursd+":"+String(a1s.minutoAgenda);
+              }
+          tft.setTextColor(TFT_BLACK);
+          tft.setTextSize(2);
+          tft.drawString("Domingos",20,60);
+          tft.drawString(hoursd,213,60);
+      
+      }else if (a1s.diasAgenda == 8) {
+              String hoursd= "";
+              if(a1s.horaAgenda<10)
+              {
+                 hoursd = hoursd+"0"+String(a1s.horaAgenda);
+                }else
+              {
+                hoursd = hoursd+""+String(a1s.horaAgenda);
+              }
+              if(a1s.minutoAgenda<10)
+              {
+                hoursd = hoursd+":0"+String(a1s.minutoAgenda);
+              }else
+              {
+                hoursd = hoursd+":"+String(a1s.minutoAgenda);
+              }
+          tft.setTextColor(TFT_BLACK);
+          tft.setTextSize(2);
+          tft.drawString("Finais de semana",10,60);
+          tft.drawString(hoursd,213,60);
+      
+      }
+
+    if (a2s.diasAgenda == 0 ){
+          tft.setTextColor(TFT_BLACK);
+          tft.setTextSize(2);
+          tft.drawString("Vazio",20,130);
+    } else if (a2s.diasAgenda == 5) {
+              String hoursd= "";
+              if(a2s.horaAgenda<10)
+              {
+                 hoursd = hoursd+"0"+String(a2s.horaAgenda);
+                }else
+              {
+                hoursd = hoursd+""+String(a2s.horaAgenda);
+              }
+              if(a2s.minutoAgenda<10)
+              {
+                hoursd = hoursd+":0"+String(a2s.minutoAgenda);
+              }else
+              {
+                hoursd = hoursd+":"+String(a2s.minutoAgenda);
+              }
+          tft.setTextColor(TFT_BLACK);
+          tft.setTextSize(2);
+          tft.drawString("Dias da Semana",20,130);
+          tft.drawString(hoursd,213,130);
+      
+      }else if (a2s.diasAgenda == 6) {
+              String hoursd= "";
+              if(a2s.horaAgenda<10)
+              {
+                 hoursd = hoursd+"0"+String(a2s.horaAgenda);
+                }else
+              {
+                hoursd = hoursd+""+String(a2s.horaAgenda);
+              }
+              if(a2s.minutoAgenda<10)
+              {
+                hoursd = hoursd+":0"+String(a2s.minutoAgenda);
+              }else
+              {
+                hoursd = hoursd+":"+String(a2s.minutoAgenda);
+              }
+          tft.setTextColor(TFT_BLACK);
+          tft.setTextSize(2);
+          tft.drawString("Sábados",20,130);
+          tft.drawString(hoursd,213,130);
+      
+      }else if (a2s.diasAgenda == 7) {
+              String hoursd= "";
+              if(a2s.horaAgenda<10)
+              {
+                 hoursd = hoursd+"0"+String(a2s.horaAgenda);
+                }else
+              {
+                hoursd = hoursd+""+String(a2s.horaAgenda);
+              }
+              if(a2s.minutoAgenda<10)
+              {
+                hoursd = hoursd+":0"+String(a2s.minutoAgenda);
+              }else
+              {
+                hoursd = hoursd+":"+String(a2s.minutoAgenda);
+              }
+          tft.setTextColor(TFT_BLACK);
+          tft.setTextSize(2);
+          tft.drawString("Domingos",20,130);
+          tft.drawString(hoursd,213,130);
+      
+      }else if (a2s.diasAgenda == 8) {
+              String hoursd= "";
+              if(a2s.horaAgenda<10)
+              {
+                 hoursd = hoursd+"0"+String(a2s.horaAgenda);
+                }else
+              {
+                hoursd = hoursd+""+String(a2s.horaAgenda);
+              }
+              if(a2s.minutoAgenda<10)
+              {
+                hoursd = hoursd+":0"+String(a2s.minutoAgenda);
+              }else
+              {
+                hoursd = hoursd+":"+String(a2s.minutoAgenda);
+              }
+          tft.setTextColor(TFT_BLACK);
+          tft.setTextSize(2);
+          tft.drawString("Finais de semana",10,130);
+          tft.drawString(hoursd,213,130);
+      
+      }
+    
+    if (a3s.diasAgenda == 0 ){
+          tft.setTextColor(TFT_BLACK);
+          tft.setTextSize(2);
+          tft.drawString("Vazio",20,200);
+    }  else if (a3s.diasAgenda == 5) {
+              String hoursd= "";
+              if(a3s.horaAgenda<10)
+              {
+                 hoursd = hoursd+"0"+String(a3s.horaAgenda);
+                }else
+              {
+                hoursd = hoursd+""+String(a3s.horaAgenda);
+              }
+              if(a3s.minutoAgenda<10)
+              {
+                hoursd = hoursd+":0"+String(a3s.minutoAgenda);
+              }else
+              {
+                hoursd = hoursd+":"+String(a3s.minutoAgenda);
+              }
+          tft.setTextColor(TFT_BLACK);
+          tft.setTextSize(2);
+          tft.drawString("Dias da Semana",20,200);
+          tft.drawString(hoursd,213,200);
+      
+      }else if (a3s.diasAgenda == 6) {
+              String hoursd= "";
+              if(a3s.horaAgenda<10)
+              {
+                 hoursd = hoursd+"0"+String(a3s.horaAgenda);
+                }else
+              {
+                hoursd = hoursd+""+String(a3s.horaAgenda);
+              }
+              if(a3s.minutoAgenda<10)
+              {
+                hoursd = hoursd+":0"+String(a3s.minutoAgenda);
+              }else
+              {
+                hoursd = hoursd+":"+String(a3s.minutoAgenda);
+              }
+          tft.setTextColor(TFT_BLACK);
+          tft.setTextSize(2);
+          tft.drawString("Sábados",20,200);
+          tft.drawString(hoursd,213,200);
+      
+      }else if (a3s.diasAgenda == 7) {
+              String hoursd= "";
+              if(a3s.horaAgenda<10)
+              {
+                 hoursd = hoursd+"0"+String(a3s.horaAgenda);
+                }else
+              {
+                hoursd = hoursd+""+String(a3s.horaAgenda);
+              }
+              if(a3s.minutoAgenda<10)
+              {
+                hoursd = hoursd+":0"+String(a3s.minutoAgenda);
+              }else
+              {
+                hoursd = hoursd+":"+String(a3s.minutoAgenda);
+              }
+          tft.setTextColor(TFT_BLACK);
+          tft.setTextSize(2);
+          tft.drawString("Domingos",20,200);
+          tft.drawString(hoursd,213,200);
+      
+      }else if (a3s.diasAgenda == 8) {
+              String hoursd= "";
+              if(a3s.horaAgenda<10)
+              {
+                 hoursd = hoursd+"0"+String(a3s.horaAgenda);
+                }else
+              {
+                hoursd = hoursd+""+String(a3s.horaAgenda);
+              }
+              if(a3s.minutoAgenda<10)
+              {
+                hoursd = hoursd+":0"+String(a3s.minutoAgenda);
+              }else
+              {
+                hoursd = hoursd+":"+String(a3s.minutoAgenda);
+              }
+          tft.setTextColor(TFT_BLACK);
+          tft.setTextSize(2);
+          tft.drawString("Finais de semana",10,200);
+          tft.drawString(hoursd,213,200);
+      
+      }
+  
+
+}
+
+void  preparaCafe(int temps)
+{
+
+  int tempAgua=80;
+  bool pausar = 0;
+  int i=0;
+  
+  if (checaBotao()== 1)
+    { 
+    pausar = 0;
+    }
+  
+  
+  for (i; i<15; i++){
+
+  sensors.requestTemperatures();
+  float tempC = sensors.getTempCByIndex(0);
+  
+  mainMenu3(temps, tempC);
+  digitalWrite(releRes,1);
+  temps = temps - 1; 
+  if (checaBotao()== 0)
+  { 
+    digitalWrite(releRes,0); //Desliga a Resistencia
+    digitalWrite(releAgua,0);
+    return;
+    }
+      else if (checaBotao()== 1)
+  { 
+    //pausar = 1;
+    }
+  delay(850); //aguarda 1 Seg
+  }
+
+  
+  
+  while(temps > -1){
+    
+//  Serial.println(temps);
+
+  sensors.requestTemperatures();
+  float tempC = sensors.getTempCByIndex(0);
+  mainMenu3(temps, tempC); 
+   if (checaBotao()== 0)
+  { 
+    digitalWrite(releRes,0); //Desliga a Resistencia
+    digitalWrite(releAgua,0);
+    return;
+    } else if (checaBotao()== 1)
+  { 
+    pausar = 1;
+    }
+  
+  digitalWrite(releRes,1); //Liga Resistencia
+//  Serial.println("Ligou Resistencia");
+  
+  temps = temps - 1; 
+  
+
+  delay(850);
+  
+  digitalWrite(releAgua,1); //Liga Aguá
+//  Serial.println("Ligou Bomba dágua");
+//
+//  if(tempAgua < 80){
+//      digitalWrite(releAgua,0);
+//       for (int i=0; i<5; i++){
+//        delay(1000); //aguarda 1 Seg
+//       }
+//      digitalWrite(releAgua,1);
+//    }
+  }
+  
+  
+  
+   digitalWrite(releRes,0); //Desliga a Resistencia
+   digitalWrite(releAgua,0);
+   statusMenu = 1;
+   return;
+   
+  
+}
+
+void  mainMenu6(int minn, int horan)
+{
+
+  uint16_t w = 0, h = 0, z= 0;
+  //statusMenu = 6;
   
               String agenda= "";
               if(horan<10)
@@ -666,13 +1255,13 @@ void  mainMenu4(int minn, int horan)
               timeChar2 = agenda;
 
               
-  TJpgDec.getJpgSize(&w, &h, menu4, sizeof(menu4));
+  TJpgDec.getJpgSize(&w, &h, menu6, sizeof(menu6));
 
   // Must use startWrite first so TFT chip select stays low during DMA and SPI channel settings remain configured
   tft.startWrite();
 
   // Draw the image, top left at 0,0 - DMA request is handled in the call-back tft_output() in this sketch
-  TJpgDec.drawJpg(0, 0, menu4, sizeof(menu4));
+  TJpgDec.drawJpg(0, 0, menu6, sizeof(menu6));
 
   // Must use endWrite to release the TFT chip select and release the SPI channel
   tft.endWrite();
@@ -685,40 +1274,88 @@ void  mainMenu4(int minn, int horan)
 
 
 }
+int checaBotao(){
+    int pausar = 0;
+    uint16_t xc, yc, zc;          
+    tft.getTouchRaw(&xc, &yc);
+    zc = tft.getTouchRawZ();
 
-
-void  mainMenu5()
-{
-
-  uint16_t w = 0, h = 0;
-  statusMenu = 5;
-  TJpgDec.getJpgSize(&w, &h, menu5, sizeof(menu5));
-
-  // Must use startWrite first so TFT chip select stays low during DMA and SPI channel settings remain configured
-  tft.startWrite();
-
-  // Draw the image, top left at 0,0 - DMA request is handled in the call-back tft_output() in this sketch
-  TJpgDec.drawJpg(0, 0, menu5, sizeof(menu5));
-
-  // Must use endWrite to release the TFT chip select and release the SPI channel
-  tft.endWrite();
-
+  
+    if ((yc > 620) && (yc <1470)&& (zc > 400)) //verifica pause e cancela
+                  {  
+                      if ((xc > 590) && (xc <1640)) //verifica o hora +
+                      {       
+                              if( pausar == 0){
+                                                pausar = 1;
+                                                Serial.println(pausar);
+                                                return 1;
+                                }
+                     
+                          }else if ((xc > 2100) && (xc <3360)) //verifica o minuto +
+                          {  
+                             statusMenu = 1;
+                             mainMenu();
+                             Serial.println("STOP");
+                             delay (500);
+                             return 0;
+                             
+                             
+                          }
+                  }
+                
 }
 
-void  preparaCafe()
-{
+void criaAgendamento( uint8_t  diasAgendaf, uint8_t  horaAgendaf,  uint8_t  minutoAgendaf,  int  quantidadeAgendaf, int  tempoAgendaf, struct Agendamentos *a1t, struct Agendamentos *a2t, struct Agendamentos *a3t){
 
-  digitalWrite(releRes,0); //Liga Resistencia
-  delay(1000); //aguarda x Seg
-  digitalWrite(releAgua,0); //Liga Aguá
+   if (a1t->diasAgenda == 0 ){
+      a1t->diasAgenda = diasAgendaf;
+      a1t->horaAgenda = horaAgendaf;
+      a1t->minutoAgenda = minutoAgendaf;
+      a1t->quantidadeAgenda = quantidadeAgendaf;
+      a1t->tempoAgenda = tempoAgendaf; 
 
-  if(temperatura > 80){
-    
-    
+      tft.fillScreen(TFT_WHITE);
+      tft.setTextColor(TFT_BLACK);
+      tft.setTextSize(2);
+      tft.drawString("Agendamento Criado",40,120);
+      delay(3000);
+
+      return;
+    }else if (a2t->diasAgenda == 0 ){
+      a2t->diasAgenda = diasAgendaf;
+      a2t->horaAgenda = horaAgendaf;
+      a2t->minutoAgenda = minutoAgendaf;
+      a2t->quantidadeAgenda = quantidadeAgendaf;
+      a2t->tempoAgenda = tempoAgendaf; 
+      tft.fillScreen(TFT_WHITE);
+      tft.setTextColor(TFT_BLACK);
+      tft.setTextSize(2);
+      tft.drawString("Agendamento Criado",40,120);
+      delay(3000);
+      return;
+      
+    }else if(a3t->diasAgenda == 0 ){
+      a3t->diasAgenda = diasAgendaf;
+      a3t->horaAgenda = horaAgendaf;
+      a3t->minutoAgenda = minutoAgendaf;
+      a3t->quantidadeAgenda = quantidadeAgendaf;
+      a3t->tempoAgenda = tempoAgendaf; 
+
+      tft.fillScreen(TFT_WHITE);
+      tft.setTextColor(TFT_BLACK);
+      tft.setTextSize(2);
+      tft.drawString("Agendamento Criado",50,120);
+      delay(3000);
+      
+      return;
     }
+
+    else     
+    
+      tft.fillScreen(TFT_WHITE);
+      tft.setTextColor(TFT_BLACK);
+      tft.setTextSize(2);
+      tft.drawString("Agenda Cheia",80,120);
+      delay(3000);
   
-  
-  
-  
-}
 }

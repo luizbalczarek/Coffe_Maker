@@ -15,12 +15,16 @@
 #include "menu4.h"
 #include "menu5.h"
 #include "menu6.h"
+#include <locale.h>
+
+
+
 
 #include <TJpg_Decoder.h>
 
 #define USE_DMA
 
-
+  
 #ifdef USE_DMA
   uint16_t  dmaBuffer1[16*16]; // Toggle buffer for 16*16 MCU block, 512bytes
   uint16_t  dmaBuffer2[16*16]; // Toggle buffer for 16*16 MCU block, 512bytes
@@ -31,12 +35,12 @@
 
 
 RTC_DS3231 rtc;
-char daysOfTheWeek[7][12] = {"Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"};
-String timeChar, timeChar2;
+char diasDaSemana[7][12] = {"Dom", "Seg", "Ter", "Quar", "Quin", "Sex", "Sáb"};
+String timeChar, timeChar2, diaN, diaS;
 char dateChar[50];
 char temperatureChar[10];
 String dateString;
-int minuteNow=0, minuteNow2=0, horaNow=0;
+int minuteNow=0, minuteNow2=0, horaNow=0, horaNow2=0, diaNow=0;
 int minutePrevious=0;
 int tempo;
 
@@ -141,10 +145,6 @@ struct Agendamentos{
             
 };
 
-String d1, d2, d3;
-String h1, h2, h3;
-String q1, q2, q3;
-
 struct Agendamentos a1, a2, a3;
 
 //------------------------------------------------------------------------------------------
@@ -155,6 +155,8 @@ void setup(void)
   tft.init();  // Set the rotation before we calibrate
   tft.setRotation(1);  // call screen calibration
   touch_calibrate();
+
+  setlocale(LC_ALL, "Portuguese");
 
   a1.diasAgenda = 0;
   a2.diasAgenda = 0;
@@ -247,18 +249,35 @@ void loop()
   WiFiClient client = server.available();   // listen for incoming clients
   DateTime now = rtc.now();
   minuteNow = now.minute();
+  horaNow = now.hour();
+  diaNow = now.dayOfTheWeek();
+
+  
               
   tft.getTouchRaw(&x, &y);
   z = tft.getTouchRawZ();
-  Serial.printf("x: %i     ", x);
-  Serial.printf("y: %i     ", y);
-  Serial.printf("z: %i     ", z);
+//  Serial.printf("x: %i     ", x);
+//  Serial.printf("y: %i     ", y);
+//  Serial.printf("z: %i     ", z);
 
   
-  Serial.println(statusMenu);
+//  Serial.println(statusMenu);
   delay(10);
 
 //  Serial.println(statusMenu);
+
+  if (verificaAlarme(a1, a2, a3, minuteNow, horaNow, diaNow) == 1) {
+    Serial.println("Run Bitch, tem café pra passar!");
+    
+    preparaCafe(a1.tempoAgenda);
+  } else if (verificaAlarme(a1, a2, a3, minuteNow, horaNow, diaNow) == 2) {
+    Serial.println("Run Bitch, tem café pra passar!");
+    preparaCafe(a2.tempoAgenda);
+  } else if (verificaAlarme(a1, a2, a3, minuteNow, horaNow, diaNow) == 3) {
+    Serial.println("Run Bitch, tem café pra passar!");
+    preparaCafe(a3.tempoAgenda);
+  }
+
 
 
      if ((minuteNow != minutePrevious) || (z > 300)) {
@@ -269,7 +288,7 @@ void loop()
         {
           if ((y > 840) && (y < 1700)) {
             Serial.println("Fazer Café");
-             statusMenu = 2;
+            statusMenu = 2;
             mainMenu2();
           }
         } else if ((x > 520) && (x < 1620))
@@ -284,7 +303,7 @@ void loop()
 
             DateTime now = rtc.now();
             minuteNow2 = now.minute();
-            horaNow = now.hour();
+            horaNow2 = now.hour();
 
             statusMenu = 4;
             mainMenu4();
@@ -293,7 +312,7 @@ void loop()
         }
 
       } else if (statusMenu == 2) {
-        mainMenu2();
+//        mainMenu2();
         if ((x > 3400) && (x < 3675)) {
           if ((y > 440) && (y < 680)) {
             Serial.println("Home");
@@ -339,14 +358,21 @@ void loop()
         //  mainMenu3();
 
       } else if (statusMenu == 4) {
-
-        if ((x > 2500) && (x < 3100) && (z > 400)) //quantidade
+//        mainMenu4();
+         if ((x > 3400) && (x < 3675)) {
+          if ((y > 440) && (y < 680)) {
+            Serial.println("Home");
+            statusMenu = 1;
+            mainMenu();
+          }
+         }
+      else if ((x > 2500) && (x < 3100) && (z > 400)) //quantidade
         {
           if ((y > 750) && (y < 3670)) {
             diasTemp = 5;
             Serial.println("Dias da Semana");
             statusMenu = 6;
-            mainMenu6(minuteNow2, horaNow);
+            mainMenu6(minuteNow2, horaNow2);
           }
 
         } else if ((x > 1620) && (x < 2000) && (z > 400)) //quantidade
@@ -355,12 +381,12 @@ void loop()
             diasTemp = 6;
             Serial.println("Sábado");
             statusMenu = 6;
-            mainMenu6(minuteNow2, horaNow);
+            mainMenu6(minuteNow2, horaNow2);
           } else if ((y > 690) && (y < 1750)) {
             diasTemp = 7;
             Serial.println("Domingo");
             statusMenu = 6;
-            mainMenu6(minuteNow2, horaNow);
+            mainMenu6(minuteNow2, horaNow2);
           }
         } else if ((x > 500) && (x < 1050) && (z > 400)) //quantidade
         {
@@ -368,30 +394,20 @@ void loop()
             diasTemp = 8;
             Serial.println("Finais de Semana");
             statusMenu = 6;
-            mainMenu6(minuteNow2, horaNow);
+            mainMenu6(minuteNow2, horaNow2);
           }
 
-        }
-        if ((x > 3400) && (x < 3675) && (z > 400)) {
-
-          if ((y > 440) && (y < 680)) {
-            Serial.println("Home 1");
-            statusMenu = 1;
-            mainMenu();
-            //                   Serial.println(statusMenu);
-          }
-          mainMenu4();
         }
       } else if (statusMenu == 6) {
-
+          mainMenu6(minuteNow2, horaNow2);
         if ((x > 2050) && (x < 2500) && (z > 400)) //verifica o hora ou minuto +
         {
           if ((y > 3030) && (y < 3330)) //verifica o hora +
           {
-            if (horaNow < 23) {
-              horaNow = horaNow + 1;
+            if (horaNow2 < 23) {
+              horaNow2 = horaNow2 + 1;
             } else {
-              horaNow = 00;
+              horaNow2 = 00;
             }
 
           } else if ((y > 2000) && (y < 2320)) //verifica o minuto +
@@ -407,10 +423,10 @@ void loop()
         {
           if ((y > 3030) && (y < 3330)) //verifica o hora -
           {
-            if (horaNow > 0) {
-              horaNow = horaNow - 1;
+            if (horaNow2 > 0) {
+              horaNow2 = horaNow2 - 1;
             } else {
-              horaNow = 23;
+              horaNow2 = 23;
             }
 
           } else if ((y > 2000) && (y < 2320)) //verifica o minuto -
@@ -434,17 +450,16 @@ void loop()
           if ((y > 750) && (y < 1616)) {
             Serial.println("OK");
             minutoTemp = minuteNow2;
-            horaTemp = horaNow;
+            horaTemp = horaNow2;
             statusMenu = 7;
             mainMenu2();
             //                     Serial.println(statusMenu);
           }  
         }
-        mainMenu6(minuteNow2, horaNow);
-      }else if (statusMenu == 5) {
-        if ((minuteNow != minutePrevious) || (z > 300)){
-
         
+      }else if (statusMenu == 5) {
+      
+        if (z > 300){
           mainMenu5(a1, a2, a3);
         }if ((x > 3400) && (x < 3675)) {
             if ((y > 440) && (y < 680)) {
@@ -718,6 +733,19 @@ void mainMenu()
               
               DateTime now = rtc.now();
               minuteNow = now.minute();
+              
+              String diaS= "";
+              String diaN= "";
+
+              diaN = diaN+String(now.day());
+              Serial.println(diaN);
+              Serial.println(now.day());
+              
+              diaS = diaS+String(diasDaSemana[now.dayOfTheWeek()]);
+              
+              Serial.println(diaS);
+              Serial.println(diasDaSemana[now.dayOfTheWeek()]);
+              
               if(minuteNow!=minutePrevious)
             {
 //              dateString = daysOfTheWeek[now.dayOfTheWeek()]+", ";
@@ -725,6 +753,9 @@ void mainMenu()
 //              dateString= dateString+"/"+ String(now.year()); 
               minutePrevious = minuteNow;
               String hours= "";
+
+
+               
               if(now.hour()<10)
               {
                  hours = hours+"0"+String(now.hour());
@@ -740,17 +771,20 @@ void mainMenu()
                 hours = hours+":"+String(now.minute());
               }
               
-
+               
               timeChar = hours;
-//              hours.toCharArray(timeChar);
+//            hours.toCharArray(timeChar);
               Serial.println(timeChar);
+
+              
+              
 
          //     tft.fillRect(10,0,160,65,ST7735_BLACK);
          //     printText(timeChar, ST7735_WHITE,20,25,3);
          //     dateString.toCharArray(dateChar,50);
          //     printText(dateChar, ST7735_GREEN,8,5,1);
 
-            }
+        }     
   
   TJpgDec.getJpgSize(&w, &h, menu1, sizeof(menu1));
 
@@ -763,9 +797,22 @@ void mainMenu()
   // Must use endWrite to release the TFT chip select and release the SPI channel
   tft.endWrite();
 
+
  tft.setTextColor(TFT_BLACK);
  tft.setTextSize(3);
  tft.drawString(timeChar,30,55); 
+
+
+  tft.setTextColor(TFT_BLACK);
+  tft.setTextSize(2);
+  tft.drawString(diaS,57,140); 
+
+
+  tft.setTextColor(TFT_BLACK);
+  tft.setTextSize(3);
+  tft.drawString(diaN,55,180);
+  
+
 }
 
 
@@ -1152,37 +1199,74 @@ void  preparaCafe(int temps)
 {
 
   int tempAgua=80;
+  int botao = 2;
   bool pausar = 0;
   int i=0;
-  
-  if (checaBotao()== 1)
-    { 
-    pausar = 0;
-    }
-  
+
+
   
   for (i; i<15; i++){
-
   sensors.requestTemperatures();
   float tempC = sensors.getTempCByIndex(0);
+
+
   
   mainMenu3(temps, tempC);
   digitalWrite(releRes,1);
   temps = temps - 1; 
-  if (checaBotao()== 0)
-  { 
-    digitalWrite(releRes,0); //Desliga a Resistencia
-    digitalWrite(releAgua,0);
+
+//  Serial.println("Botão antes:");
+//  Serial.println(botao);
+  botao = checaBotao();
+
+//  Serial.println("Botão Depois:");
+//  Serial.println(botao);
+  
+  if (botao == 0) {
+//    Serial.println("Botão 0:");
+//    Serial.println(botao);
+    digitalWrite(releRes, 0); //Desliga a Resistencia
     return;
-    }
-      else if (checaBotao()== 1)
-  { 
-    //pausar = 1;
-    }
-  delay(850); //aguarda 1 Seg
+  } 
+//  else if (botao == 1) {
+//    pausar = !pausar;
+//    Serial.println("Botão 1:");
+//    Serial.println(botao);
+//    //   delay(200);
+//  }
+
+//  while (pausar == 1) {
+//    Serial.println("Pausou");
+//    digitalWrite(releRes, 1); //Desliga a Resistencia
+////    digitalWrite(releAgua, 0);
+//    delay(200);
+//
+//    Serial.println("Botão Antes da checagem, dentro do while:");
+//    Serial.println(botao);
+//    
+//    botao = checaBotao();
+//    Serial.println("Botão depois da checagem, dentro do while:");
+//    Serial.println(botao);
+//    if (botao == 0) {
+//
+//       Serial.println("Botão 0, dentro do while:");
+//       Serial.println(botao);
+//      digitalWrite(releRes, 0); //Desliga a Resistencia
+// //     digitalWrite(releAgua, 0);
+//      return;
+//    } else if (botao == 1) {
+//       Serial.println("Botão 1, dentro do while:");
+//      Serial.println(botao);
+//      pausar = !pausar;
+//      digitalWrite(releRes, 1); //Desliga a Resistencia
+//    }
+//  }
+  
+   
+   delay(130); //aguarda 1 Seg
   }
 
-  
+    
   
   while(temps > -1){
     
@@ -1191,25 +1275,54 @@ void  preparaCafe(int temps)
   sensors.requestTemperatures();
   float tempC = sensors.getTempCByIndex(0);
   mainMenu3(temps, tempC); 
-   if (checaBotao()== 0)
-  { 
-    digitalWrite(releRes,0); //Desliga a Resistencia
-    digitalWrite(releAgua,0);
+
+  botao = checaBotao();
+   if (botao == 0) {
+//    Serial.println("Botão 0:");
+//    Serial.println(botao);
+    digitalWrite(releRes, 0); //Desliga a Resistencia
     return;
-    } else if (checaBotao()== 1)
-  { 
-    pausar = 1;
-    }
+  }
   
-  digitalWrite(releRes,1); //Liga Resistencia
+//   
+//   if (checaBotao()== 0)
+//  { 
+//    digitalWrite(releRes,0); //Desliga a Resistencia
+//    digitalWrite(releAgua,0);
+//    return;
+//    } else if (checaBotao()== 1)
+//    { 
+//    pausar = !pausar;
+// //   delay(200);
+//    }
+//  
+//
+//   while (pausar == 1){
+//    Serial.println("Pausou");
+//    delay(200);
+//    if (checaBotao()== 0)
+//      { 
+//    digitalWrite(releRes,0); //Desliga a Resistencia
+//    digitalWrite(releAgua,0);
+//    return;
+//    }    
+//    if (checaBotao()== 1)
+//                  { 
+//    pausar = !pausar; 
+//    }
+//   }
+
+
+ 
+//  digitalWrite(releRes,1); //Liga Resistencia
 //  Serial.println("Ligou Resistencia");
   
   temps = temps - 1; 
   
 
-  delay(850);
+  delay(130);
   
-  digitalWrite(releAgua,1); //Liga Aguá
+//  digitalWrite(releAgua,1); //Liga Aguá
 //  Serial.println("Ligou Bomba dágua");
 //
 //  if(tempAgua < 80){
@@ -1283,25 +1396,27 @@ int checaBotao(){
   
     if ((yc > 620) && (yc <1470)&& (zc > 400)) //verifica pause e cancela
                   {  
-                      if ((xc > 590) && (xc <1640)) //verifica o hora +
-                      {       
-                              if( pausar == 0){
-                                                pausar = 1;
-                                                Serial.println(pausar);
-                                                return 1;
-                                }
-                     
-                          }else if ((xc > 2100) && (xc <3360)) //verifica o minuto +
+//                      if ((xc > 590) && (xc <1640)) //verifica o hora +
+//                      {       
+//                              if( pausar == 0){
+//                                                pausar = 1;
+//                                            //    Serial.println(pausar);
+//                                                return 1;
+//                                }
+//                     
+//                          }
+//                          else if ((xc > 2100) && (xc <3360)) //verifica o minuto +
+                        if ((xc > 2100) && (xc <3360)) //verifica o STOP
                           {  
                              statusMenu = 1;
                              mainMenu();
-                             Serial.println("STOP");
+                      //       Serial.println("STOP");
                              delay (500);
                              return 0;
-                             
-                             
+    
                           }
                   }
+                  return 2;
                 
 }
 
@@ -1359,3 +1474,75 @@ void criaAgendamento( uint8_t  diasAgendaf, uint8_t  horaAgendaf,  uint8_t  minu
       delay(3000);
   
 }
+
+int verificaAlarme(struct Agendamentos a1t, struct Agendamentos a2t, struct Agendamentos a3t, int minuteNowf, int horaNowf, int diaNowf) {
+  int dia = 0;
+  int finde = 0;
+
+  if (diaNowf == 1 || diaNowf == 2 || diaNowf == 3 || diaNowf == 4 || diaNowf == 5) {
+    dia = 5;
+  } else if (diaNowf == 0) {
+    dia = 7;
+    finde = 8;
+  } else if (diaNowf == 6) {
+    dia = 6;
+    finde = 8;
+  }
+
+  
+  if (a1t.diasAgenda != 0) {
+//    Serial.println("Tem agendamento");
+    if (a1t.diasAgenda == dia || a1t.diasAgenda == finde) {
+//        Serial.println("É o dia");
+//        Serial.println(a1t.horaAgenda);
+//        Serial.println(horaNowf);
+//        Serial.println(a1t.minutoAgenda);
+//        Serial.println(minuteNowf);
+        
+      if (a1t.horaAgenda == horaNowf) {
+//         Serial.println("É a hora");
+        if (a1t.minutoAgenda == minuteNowf) {
+//           Serial.println("É o minuto");
+          return 1;
+        }
+      }
+    }
+
+  } 
+  
+  if (a2t.diasAgenda != 0) {
+    if (a2t.diasAgenda == dia || a2t.diasAgenda == finde) {
+      if (a2t.horaAgenda == horaNowf) {
+        if (a2t.minutoAgenda == minuteNowf) {
+          return 2;
+        }
+      }
+    }
+
+  } 
+  
+  if (a3t.diasAgenda != 0) {
+
+    if (a3t.diasAgenda == dia || a3t.diasAgenda == finde) {
+
+      if (a3t.horaAgenda == horaNowf) 
+        if (a3t.minutoAgenda == minuteNowf) {
+          return 3;
+        }
+      }
+    }
+
+
+  return 0;
+}
+
+
+
+
+
+
+
+
+
+
+  

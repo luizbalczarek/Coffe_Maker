@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/my_nav"
+    app:startDestination="@id/preparando">
+
+    <navigation android:id="@+id/navigation2"
+        app:startDestination="@id/ajustes">
+        <activity
+            android:id="@+id/ajustes"
+            android:name="com.example.coffe_maker.Ajustes"
+            android:label="activity_ajustes"
+            tools:layout="@layout/activity_ajustes" />
+        <action
+            android:id="@+id/action_global_navigation3"
+            app:destination="@id/navigation3" />
+    </navigation>
+    <navigation android:id="@+id/navigation3"
+        app:startDestination="@id/preparando">
+        <activity
+            android:id="@+id/preparando"
+            android:name="com.example.coffe_maker.Preparando"
+            android:label="activity_preparando"
+            tools:layout="@layout/activity_preparando" />
+    </navigation>
+</navigation>

@@ -4,30 +4,106 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/b660d10224389a5df8e7d51557d7aeca"
     tools:context=".Ajustes">
 
     <TextView
         android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Ajustar a quantidade?"
-        tools:layout_editor_absoluteX="137dp"
-        tools:layout_editor_absoluteY="112dp" />
+        android:layout_gravity="center"
+        android:layout_marginStart="7dp"
+        android:layout_marginLeft="7dp"
+        android:layout_marginTop="32dp"
+        android:text="Selecione a quantidade de café que deseja preparar:"
+        android:textColor="#FFFFFF"
+        android:textSize="17sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <Button
-        android:id="@+id/button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Iniciar Preparo"
-        tools:layout_editor_absoluteX="144dp"
-        tools:layout_editor_absoluteY="429dp" />
+        android:id="@+id/button2"
+        android:layout_width="180dp"
+        android:layout_height="63dp"
+        android:layout_gravity="center"
+        android:layout_marginStart="115dp"
+        android:layout_marginLeft="115dp"
+        android:layout_marginTop="32dp"
+        android:text="200 ml"
+        android:textColor="#000000"
+        android:visibility="visible"
+        app:backgroundTint="#FFFFFF"
+        app:iconTint="#FAF4F4"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView"
+        tools:visibility="visible" />
+
+    <Button
+        android:id="@+id/button3"
+        android:layout_width="180dp"
+        android:layout_height="63dp"
+        android:layout_gravity="center"
+        android:layout_marginStart="115dp"
+        android:layout_marginLeft="115dp"
+        android:layout_marginTop="32dp"
+        android:text="400 ml"
+        android:textColor="#000000"
+        android:visibility="visible"
+        app:backgroundTint="#FFFFFF"
+        app:iconTint="#FAF4F4"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/button2" />
+
+    <Button
+        android:id="@+id/button4"
+        android:layout_width="180dp"
+        android:layout_height="63dp"
+        android:layout_gravity="center"
+        android:layout_marginStart="115dp"
+        android:layout_marginLeft="115dp"
+        android:layout_marginTop="32dp"
+        android:text="600 ml"
+        android:textColor="#000000"
+        android:visibility="visible"
+        app:backgroundTint="#FFFFFF"
+        app:iconTint="#FAF4F4"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/button3" />
+
+    <Button
+        android:id="@+id/button5"
+        android:layout_width="180dp"
+        android:layout_height="63dp"
+        android:layout_gravity="center"
+        android:layout_marginStart="115dp"
+        android:layout_marginLeft="115dp"
+        android:layout_marginTop="32dp"
+        android:text="800 ml"
+        android:textColor="#000000"
+        android:visibility="visible"
+        app:backgroundTint="#FFFFFF"
+        app:iconTint="#FAF4F4"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/button4" />
 
     <EditText
-        android:id="@+id/editTextNumber"
+        android:id="@+id/txtResul2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:enabled="false"
+        app:layout_constraintTop_toBottomOf="@+id/button5"
+        tools:layout_editor_absoluteX="0dp"
+        tools:visibility="visible" />
+
+    <Button
+        android:id="@+id/button10"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:ems="10"
-        android:inputType="number"
-        tools:layout_editor_absoluteX="94dp"
-        tools:layout_editor_absoluteY="263dp" />
+        android:onClick="irTelaPreparando"
+        android:text="preparo800"
+        android:visibility="invisible"
+        tools:layout_editor_absoluteX="199dp"
+        tools:layout_editor_absoluteY="549dp" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

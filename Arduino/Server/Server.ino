@@ -43,6 +43,7 @@ String dateString;
 int minuteNow=0, minuteNow2=0, horaNow=0, horaNow2=0, diaNow=0;
 int minutePrevious=0;
 int tempo;
+int preparoApp=0;
 
 TFT_eSPI tft = TFT_eSPI();       // Invoke custom library
 
@@ -61,6 +62,12 @@ IPAddress dns(192, 168, 0, 1);
 #define REPEAT_CAL false
 
 #define led1 14 
+
+const int q800 = 740;
+const int q600 = 555;
+const int q400 = 370;
+const int q200 = 185;
+
 
 //boolean SwitchOn = false;
 
@@ -278,6 +285,10 @@ void loop()
     preparaCafe(a3.tempoAgenda);
   }
 
+// Verifica preparo App
+  if (preparoApp!= 0){
+      preparaCafe(preparoApp);
+    }
 
 
      if ((minuteNow != minutePrevious) || (z > 300)) {
@@ -323,14 +334,14 @@ void loop()
         } else if ((x > 2100) && (x < 3550) && (z > 400)) //quantidade
         {
           if ((y > 2500) && (y < 3800)) {
-            quantidade = 200;
+            quantidade = q200;
             tempo = 185;
             preparaCafe(tempo);
 
           }
 
           if ((y > 850) && (y < 2200)) {
-            quantidade = 400;
+            quantidade = q400;
             tempo = 370;
             preparaCafe(tempo);
             //mainMenu3();
@@ -339,14 +350,14 @@ void loop()
         } else if ((x > 0) && (x < 1750) && (z > 400)) //verifica quantidade
         {
           if ((y > 2470) && (y < 3800)) {
-            quantidade = 600;
+            quantidade = q600;
             tempo = 555;
             preparaCafe(tempo);
             //mainMenu3();
           }
           if ((y > 850) && (y < 2180)) //quantidade
           {
-            quantidade = 800;
+            quantidade = q800;
             tempo = 740;
             preparaCafe(tempo);
             //mainMenu3();
@@ -514,7 +525,7 @@ void loop()
           } else if ((x > 2100) && (x < 3550) && (z > 400)) //quantidade
           {
             if ((y > 2500) && (y < 3800)) {
-              quantidadeTemp = 200;
+              quantidadeTemp = q200;
               tempoTemp = 185;
               criaAgendamento(  diasTemp,  horaTemp,  minutoTemp,  quantidadeTemp  , tempoTemp, &a1, &a2, &a3);
               mainMenu();
@@ -522,7 +533,7 @@ void loop()
             }
 
             if ((y > 850) && (y < 2200)) {
-              quantidadeTemp = 400;
+              quantidadeTemp = q400;
               tempoTemp = 370;
               criaAgendamento(  diasTemp,  horaTemp,  minutoTemp,  quantidadeTemp  , tempoTemp, &a1, &a2, &a3);
               mainMenu();
@@ -533,7 +544,7 @@ void loop()
           } else if ((x > 0) && (x < 1750) && (z > 400)) //verifica quantidade
           {
             if ((y > 2470) && (y < 3800)) {
-              quantidadeTemp = 600;
+              quantidadeTemp = q600;
               tempoTemp = 555;
               criaAgendamento(  diasTemp,  horaTemp,  minutoTemp,  quantidadeTemp  , tempoTemp, &a1, &a2, &a3);
               mainMenu();
@@ -542,7 +553,7 @@ void loop()
             }
             if ((y > 850) && (y < 2180)) //quantidade
             {
-              quantidadeTemp = 800;
+              quantidadeTemp = q800;
               tempoTemp = 740;
               criaAgendamento(  diasTemp,  horaTemp,  minutoTemp,  quantidadeTemp  , tempoTemp, &a1, &a2, &a3);
               mainMenu();
@@ -589,32 +600,88 @@ void loop()
     
     if (client) {                             // if you get a client,
     Serial.println("New Client.");           // print a message out the serial port
-      
-      int luminosidade = 100;
+        
+//      int luminosidade = 100;
 
-       delay(4000);
+//       delay(4000);
 
-      
+        String retorno;
         String request = client.readStringUntil('\r');
         Serial.println(request);
 //        client.flush();
-         
+
          // analisar os dados que chegaram
           client.println("HTTP/1.1 200 OK");
           client.println("Content-type:text/html");
-          client.println(); 
+          client.println();
           
-        if (request.indexOf(F("led1")) != -1) {
-          digitalWrite(led1, !digitalRead(led1));
-          Serial.println("LED 1 Chegou");     
-          client.println("LED1");   
+        if (request.indexOf(F("800")) != -1) {
+          Serial.println("Preapara 800 ml de café");  
+          preparoApp = q800;
+          client.println("OK,800");
+          // delay(200);           
+        } 
+
+        if (request.indexOf(F("600")) != -1) {
+          Serial.println("Preapara 600 ml de café");  
+          preparoApp = q600;
+          client.println("OK,600");
+          // delay(200);           
+        } 
+
+        if (request.indexOf(F("400")) != -1) {
+          Serial.println("Preapara 400 ml de café");  
+          preparoApp = q400;
+          client.println("OK,400");
+          // delay(200);           
+        } 
+
+        if (request.indexOf(F("200")) != -1) {
+          Serial.println("Preapara 200 ml de café");  
+          preparoApp = q200;
+          client.println("OK,200");
+          // delay(200);           
         } 
 
 
-          client.println("Oi");
+
+        if (request.indexOf(F("get_agendamentos")) != -1) {
+          Serial.println("pegando Agendamentos");  
+         // preparoApp = q200;
+          retorno = retornaAgendamentoApp(a1, a2, a3);
+          Serial.println(retorno);
+          client.println(retorno);
+          // delay(200);           
+        }
+
+       if (request.indexOf(F("del_age1")) != -1) {  
+          a1.diasAgenda = 0;
+          retorno = retornaAgendamentoApp(a1, a2, a3);
+          Serial.println(retorno);
+          client.println(retorno);
+          // delay(200);           
+        }
+
+          if (request.indexOf(F("del_age2")) != -1) {  
+          a2.diasAgenda = 0;
+          retorno = retornaAgendamentoApp(a1, a2, a3);
+          Serial.println(retorno);
+          client.println(retorno);
+          // delay(200);           
+        }
+
+          if (request.indexOf(F("del_age3")) != -1) {  
+          a3.diasAgenda = 0;
+          retorno = retornaAgendamentoApp(a1, a2, a3);
+          Serial.println(retorno);
+          client.println(retorno);
+          // delay(200);           
+        }
+        
+//          client.println("Oi");
 
 
-    Serial.println(F("Disconnecting from client"));
+  //  Serial.println(F("Disconnecting from client"));
   
     }
     
@@ -1338,6 +1405,7 @@ void  preparaCafe(int temps)
   
    digitalWrite(releRes,0); //Desliga a Resistencia
    digitalWrite(releAgua,0);
+   preparoApp = 0;
    statusMenu = 1;
    return;
    
@@ -1409,6 +1477,7 @@ int checaBotao(){
                         if ((xc > 2100) && (xc <3360)) //verifica o STOP
                           {  
                              statusMenu = 1;
+                             preparoApp = 0;
                              mainMenu();
                       //       Serial.println("STOP");
                              delay (500);
@@ -1536,7 +1605,96 @@ int verificaAlarme(struct Agendamentos a1t, struct Agendamentos a2t, struct Agen
   return 0;
 }
 
+String retornaAgendamentoApp (struct Agendamentos a1a, struct Agendamentos a2a, struct Agendamentos a3a){
 
+     String agendaApp= "";
+     
+    if (a1a.diasAgenda == 0){
+      agendaApp = agendaApp+String("Vazio,"); 
+      } else {
+               if(a1a.horaAgenda<10)
+              {
+                 agendaApp = agendaApp+"0"+String(a1a.horaAgenda);
+                }else
+              {
+                agendaApp = agendaApp+""+String(a1a.horaAgenda);
+              }
+              if(a1a.minutoAgenda<10)
+              {
+                agendaApp = agendaApp+":0"+String(a1a.minutoAgenda);
+              }else
+              {
+                agendaApp = agendaApp+":"+String(a1a.minutoAgenda);
+              }
+              if (a1a.diasAgenda == 5){
+              agendaApp = agendaApp+String( " - Dias da Semana,");
+              } else if (a1a.diasAgenda == 6){
+              agendaApp = agendaApp+String( " - Sábados,");
+              }else if (a1a.diasAgenda == 7){
+              agendaApp = agendaApp+String( " - Domingos,");
+              }else if (a1a.diasAgenda == 8){
+              agendaApp = agendaApp+String( " - Finais de Semana,");
+              }
+      }
+    if (a2a.diasAgenda == 0){
+      agendaApp = agendaApp+String("Vazio,");
+      }else {
+               if(a2a.horaAgenda<10)
+              {
+                 agendaApp = agendaApp+"0"+String(a2a.horaAgenda);
+                }else
+              {
+                agendaApp = agendaApp+""+String(a2a.horaAgenda);
+              }
+              if(a2a.minutoAgenda<10)
+              {
+                agendaApp = agendaApp+":0"+String(a2a.minutoAgenda);
+              }else
+              {
+                agendaApp = agendaApp+":"+String(a2a.minutoAgenda);
+              }
+              if (a2a.diasAgenda == 5){
+              agendaApp = agendaApp+String( " - Dias da Semana,");
+              } else if (a2a.diasAgenda == 6){
+              agendaApp = agendaApp+String( " - Sábados,");
+              }else if (a2a.diasAgenda == 7){
+              agendaApp = agendaApp+String( " - Domingos,");
+              }else if (a2a.diasAgenda == 8){
+              agendaApp = agendaApp+String( " - Finais de Semana,");
+              }
+      }
+
+
+     if (a3a.diasAgenda == 0){
+      agendaApp = agendaApp+String("Vazio");
+      }else {
+               if(a3a.horaAgenda<10)
+              {
+                 agendaApp = agendaApp+"0"+String(a3a.horaAgenda);
+                }else
+              {
+                agendaApp = agendaApp+""+String(a3a.horaAgenda);
+              }
+              if(a3a.minutoAgenda<10)
+              {
+                agendaApp = agendaApp+":0"+String(a3a.minutoAgenda);
+              }else
+              {
+                agendaApp = agendaApp+":"+String(a3a.minutoAgenda);
+              }
+              if (a3a.diasAgenda == 5){
+              agendaApp = agendaApp+String( " - Dias da Semana,");
+              } else if (a3a.diasAgenda == 6){
+              agendaApp = agendaApp+String( " - Sábados,");
+              }else if (a3a.diasAgenda == 7){
+              agendaApp = agendaApp+String( " - Domingos,");
+              }else if (a3a.diasAgenda == 8){
+              agendaApp = agendaApp+String( " - Finais de Semana,");
+              }
+      }
+ 
+  return agendaApp;
+  }
 
 
 

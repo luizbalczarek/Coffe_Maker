@@ -17,6 +17,7 @@ import android.widget.Toast;
 public class Agendamentos extends AppCompatActivity {
     EditText age1, age2, age3;
     Button atualizar, del_age1, del_age2, del_age3;
+    String data1, data2, data3;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,6 +31,19 @@ public class Agendamentos extends AppCompatActivity {
         del_age1 = (Button) findViewById(R.id. del_age1);
         del_age2 = (Button) findViewById(R.id. del_age2);
         del_age3 = (Button) findViewById(R.id. del_age3);
+
+        Bundle bundle = getIntent().getExtras();
+        if (bundle != null)
+        {
+            data1 = bundle.getString("ag1p");
+            data2 = bundle.getString("ag2p");
+            data3 = bundle.getString("ag3p");
+
+        }
+
+        age1.setText(data1);
+        age2.setText(data2);
+        age3.setText(data3);
 
 
         atualizar.setOnClickListener(new View.OnClickListener() {

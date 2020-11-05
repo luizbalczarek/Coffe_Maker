@@ -525,16 +525,16 @@ void loop()
           } else if ((x > 2100) && (x < 3550) && (z > 400)) //quantidade
           {
             if ((y > 2500) && (y < 3800)) {
-              quantidadeTemp = 200;
-              tempoTemp = q200;
+              quantidadeTemp = q200;
+              tempoTemp = 185;
               criaAgendamento(  diasTemp,  horaTemp,  minutoTemp,  quantidadeTemp  , tempoTemp, &a1, &a2, &a3);
               mainMenu();
 
             }
 
             if ((y > 850) && (y < 2200)) {
-              quantidadeTemp = 400;
-              tempoTemp = q400;
+              quantidadeTemp = q400;
+              tempoTemp = 370;
               criaAgendamento(  diasTemp,  horaTemp,  minutoTemp,  quantidadeTemp  , tempoTemp, &a1, &a2, &a3);
               mainMenu();
 
@@ -544,8 +544,8 @@ void loop()
           } else if ((x > 0) && (x < 1750) && (z > 400)) //verifica quantidade
           {
             if ((y > 2470) && (y < 3800)) {
-              quantidadeTemp = 600;
-              tempoTemp = q600;
+              quantidadeTemp = q600;
+              tempoTemp = 555;
               criaAgendamento(  diasTemp,  horaTemp,  minutoTemp,  quantidadeTemp  , tempoTemp, &a1, &a2, &a3);
               mainMenu();
 
@@ -553,8 +553,8 @@ void loop()
             }
             if ((y > 850) && (y < 2180)) //quantidade
             {
-              quantidadeTemp = 800;
-              tempoTemp = q800;
+              quantidadeTemp = q800;
+              tempoTemp = 740;
               criaAgendamento(  diasTemp,  horaTemp,  minutoTemp,  quantidadeTemp  , tempoTemp, &a1, &a2, &a3);
               mainMenu();
 
@@ -693,40 +693,29 @@ void loop()
           quantidadeR = strtok(NULL, ":");
 
 
-          if (diaR == "age_diasda"){
+          if (diaR == age_diasda){
             diaRa = 5;
-            }         else if (diaR == "age_sabado"){
+            }         else if (diaR == age_sabado){
               diaRa = 6;
-            }         else if (diaR == "age_doming"){
+            }         else if (diaR == age_doming){
               diaRa = 7;
-            }         else if (diaR == "age_finais"){
+            }         else if (diaR == age_finais){
               diaRa = 8;
             }
 
-            if (quantidadeR == "200"){
-            quantidadeTemp = 200;
-            tempoTemp = q200;
-            }         else if (quantidadeR == "400"){
-            quantidadeTemp = 400;
-            tempoTemp = q400;
-            }         else if (quantidadeR == "600"){
-                        quantidadeTemp = 600;
-            tempoTemp = q600;
-            }         else if (quantidadeR == "800"){
-                       quantidadeTemp = 800;
-            tempoTemp = q800;
-            }
+           //quantidadeTemp = q800;
+          // tempoTemp = 740;
+          horaR.toInt(horaRa);
+          minutoR.toInt(minutoRA);
 
-            horaRa = horaR.toInt();
-            minutoRA = minutoR.toInt();
+          
+          criaAgendamento(diaRa,  horaTemp,  minutoTemp,  quantidadeTemp  , tempoTemp, &a1, &a2, &a3);
 
 
           
-          if (criaAgendamento(diaRa,  horaRa,  minutoRA,  quantidadeTemp  , tempoTemp, &a1, &a2, &a3) == 1 ){
-            client.println("Cheio");
-            }
-          
-          Serial.println(quantidadeR);
+          Serial.println(diaR);
+          Serial.println(horaR);
+          Serial.println(minutoR);
            
         }
 
@@ -1543,7 +1532,7 @@ int checaBotao(){
                 
 }
 
-int criaAgendamento( uint8_t  diasAgendaf, uint8_t  horaAgendaf,  uint8_t  minutoAgendaf,  int  quantidadeAgendaf, int  tempoAgendaf, struct Agendamentos *a1t, struct Agendamentos *a2t, struct Agendamentos *a3t){
+void criaAgendamento( uint8_t  diasAgendaf, uint8_t  horaAgendaf,  uint8_t  minutoAgendaf,  int  quantidadeAgendaf, int  tempoAgendaf, struct Agendamentos *a1t, struct Agendamentos *a2t, struct Agendamentos *a3t){
 
    if (a1t->diasAgenda == 0 ){
       a1t->diasAgenda = diasAgendaf;
@@ -1558,7 +1547,7 @@ int criaAgendamento( uint8_t  diasAgendaf, uint8_t  horaAgendaf,  uint8_t  minut
       tft.drawString("Agendamento Criado",40,120);
       delay(3000);
 
-      return 0 ;
+      return;
     }else if (a2t->diasAgenda == 0 ){
       a2t->diasAgenda = diasAgendaf;
       a2t->horaAgenda = horaAgendaf;
@@ -1570,7 +1559,7 @@ int criaAgendamento( uint8_t  diasAgendaf, uint8_t  horaAgendaf,  uint8_t  minut
       tft.setTextSize(2);
       tft.drawString("Agendamento Criado",40,120);
       delay(3000);
-      return 0;
+      return;
       
     }else if(a3t->diasAgenda == 0 ){
       a3t->diasAgenda = diasAgendaf;
@@ -1585,15 +1574,15 @@ int criaAgendamento( uint8_t  diasAgendaf, uint8_t  horaAgendaf,  uint8_t  minut
       tft.drawString("Agendamento Criado",50,120);
       delay(3000);
       
-      return 0;
+      return;
     }
 
     else     
+    
       tft.fillScreen(TFT_WHITE);
       tft.setTextColor(TFT_BLACK);
       tft.setTextSize(2);
       tft.drawString("Agenda Cheia",80,120);
-      return 1;
       delay(3000);
   
 }

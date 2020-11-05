@@ -19,19 +19,18 @@ import okhttp3.OkHttpClient;
 
 public class MainActivity extends AppCompatActivity {
 
-    ImageButton imageButton;
+    ImageButton imageButton3;
 //    TextView txtOi;
     EditText txtResul;
+
+
 
     public void irTelaPreparo(View view){
         Intent intent1 = new Intent(getApplicationContext(), Ajustes.class );
         startActivity(intent1);
     }
 
-    public void irTelaAgendamento(View view){
-        Intent intent2 = new Intent(getApplicationContext(), Agendamentos.class );
-        startActivity(intent2);
-    }
+
 
     public void irTelaCriarAgendamento(View view){
         Intent intent3 = new Intent(getApplicationContext(), Criar_agendamento.class );
@@ -43,49 +42,59 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-//        imageButton = (ImageButton) findViewById(R.id.imageButton);
 
-//        txtOi = (TextView) findViewById(R.id.txtOi);
+        imageButton3 = (ImageButton) findViewById(R.id.imageButton3);
 
-//        txtResul = (EditText) findViewById(R.id. txtResul);
+        imageButton3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
 
-//        imageButton.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//
-//                ConnectivityManager conMgr = (ConnectivityManager)
-//                        getSystemService(Context.CONNECTIVITY_SERVICE);
-//                NetworkInfo networkInfo = conMgr.getActiveNetworkInfo();
-//                String url= "http://192.168.0.180/";
-//
-//                if(networkInfo != null && networkInfo.isConnected()){
-//
-//                     new SolicitaDados().execute(url);
-//
-//
-//                }else {
-//                    Toast.makeText(MainActivity.this, "Nenhuma conexão foi detectada", Toast.LENGTH_LONG).show();
-//                }
-//            }
-//        });
+
+                ConnectivityManager conMgr = (ConnectivityManager)
+                        getSystemService(Context.CONNECTIVITY_SERVICE);
+                NetworkInfo networkInfo = conMgr.getActiveNetworkInfo();
+                String url= "http://192.168.0.180/get_agendamentos";
+
+                if(networkInfo != null && networkInfo.isConnected()){
+                    new SolicitaDados().execute(url);
+
+                }else {
+                    Toast.makeText(MainActivity.this, "Nenhuma conexão foi detectada", Toast.LENGTH_LONG).show();
+                }
+            }
+        });
 
      }
-//     private class SolicitaDados extends AsyncTask<String, Void, String> {
-//
-//         @Override
-//         protected String doInBackground(String... url) {
-//             return Conexao.getDados(url[0]);
-//         }
-//
-//         @Override
-//         protected void onPostExecute(String resultado) {
-//
-//             if(resultado != null){
-//
-//                txtResul.setText(resultado);
-//             } else {
-//                 Toast.makeText(MainActivity.this, "Ocorreu um erro", Toast.LENGTH_LONG).show();
-//             }
-//         }
-//     }
+     private class SolicitaDados extends AsyncTask<String, Void, String> {
+
+         @Override
+         protected String doInBackground(String... url) {
+             return Conexao.getDados(url[0]);
+         }
+
+         @Override
+         protected void onPostExecute(String resultado) {
+
+             if(resultado != null){
+                 String[] dados_recebidos = resultado.split(",");
+                 String age1="", age2="", age3="";
+                 age1 = (dados_recebidos[0]);
+                 age2 = (dados_recebidos[1]);
+                 age3 = (dados_recebidos[2]);
+
+                 Intent intent2 = new Intent(getApplicationContext(), Agendamentos.class );
+
+                 Bundle bundle = new Bundle();
+                 bundle.putString( "ag1p", age1);
+                 bundle.putString( "ag2p", age2);
+                 bundle.putString( "ag3p", age3);
+
+                 intent2.putExtras(bundle);
+                 startActivity(intent2);
+
+             } else {
+                 Toast.makeText(MainActivity.this, "Ocorreu um erro", Toast.LENGTH_LONG).show();
+             }
+         }
+     }
 }

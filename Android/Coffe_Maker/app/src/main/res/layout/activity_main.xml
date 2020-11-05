@@ -51,7 +51,6 @@
         android:layout_height="183dp"
         android:layout_gravity="center"
         android:background="@android:color/transparent"
-        android:onClick="irTelaAgendamento"
         android:scaleType="fitStart"
         app:srcCompat="@drawable/agenda___copia" />
 

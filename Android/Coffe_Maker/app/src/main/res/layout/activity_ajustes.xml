@@ -4,86 +4,78 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+
     android:background="@drawable/b660d10224389a5df8e7d51557d7aeca"
     tools:context=".Ajustes">
 
-    <TextView
-        android:id="@+id/textView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginStart="7dp"
-        android:layout_marginLeft="7dp"
-        android:layout_marginTop="32dp"
-        android:text="Selecione a quantidade de café que deseja preparar:"
-        android:textColor="#FFFFFF"
-        android:textSize="17sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-    <Button
-        android:id="@+id/button2"
-        android:layout_width="180dp"
-        android:layout_height="63dp"
-        android:layout_gravity="center"
-        android:layout_marginStart="115dp"
-        android:layout_marginLeft="115dp"
-        android:layout_marginTop="32dp"
-        android:text="200 ml"
-        android:textColor="#000000"
-        android:visibility="visible"
-        app:backgroundTint="#FFFFFF"
-        app:iconTint="#FAF4F4"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView"
-        tools:visibility="visible" />
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
 
-    <Button
-        android:id="@+id/button3"
-        android:layout_width="180dp"
-        android:layout_height="63dp"
-        android:layout_gravity="center"
-        android:layout_marginStart="115dp"
-        android:layout_marginLeft="115dp"
-        android:layout_marginTop="32dp"
-        android:text="400 ml"
-        android:textColor="#000000"
-        android:visibility="visible"
-        app:backgroundTint="#FFFFFF"
-        app:iconTint="#FAF4F4"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/button2" />
+            android:layout_marginTop="32dp"
+            android:gravity="center"
+            android:text="Selecione a quantidade de café que deseja preparar:"
+            android:textColor="#FFFFFF"
+            android:textSize="17sp" />
 
-    <Button
-        android:id="@+id/button4"
-        android:layout_width="180dp"
-        android:layout_height="63dp"
-        android:layout_gravity="center"
-        android:layout_marginStart="115dp"
-        android:layout_marginLeft="115dp"
-        android:layout_marginTop="32dp"
-        android:text="600 ml"
-        android:textColor="#000000"
-        android:visibility="visible"
-        app:backgroundTint="#FFFFFF"
-        app:iconTint="#FAF4F4"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/button3" />
+        <Button
+            android:id="@+id/button2"
+            android:layout_width="180dp"
+            android:layout_height="63dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="32dp"
+            android:text="200 ml"
+            android:textColor="#000000"
+            android:visibility="visible"
+            app:backgroundTint="#FFFFFF"
+            app:iconTint="#FAF4F4"
+            tools:visibility="visible" />
 
-    <Button
-        android:id="@+id/button5"
-        android:layout_width="180dp"
-        android:layout_height="63dp"
-        android:layout_gravity="center"
-        android:layout_marginStart="115dp"
-        android:layout_marginLeft="115dp"
-        android:layout_marginTop="32dp"
-        android:text="800 ml"
-        android:textColor="#000000"
-        android:visibility="visible"
-        app:backgroundTint="#FFFFFF"
-        app:iconTint="#FAF4F4"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/button4" />
+        <Button
+            android:id="@+id/button3"
+            android:layout_width="180dp"
+            android:layout_height="63dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="32dp"
+            android:text="400 ml"
+            android:textColor="#000000"
+            android:visibility="visible"
+            app:backgroundTint="#FFFFFF"
+            app:iconTint="#FAF4F4" />
+
+        <Button
+            android:id="@+id/button4"
+            android:layout_width="180dp"
+            android:layout_height="63dp"
+            android:layout_gravity="center"
+
+            android:layout_marginTop="32dp"
+            android:text="600 ml"
+            android:textColor="#000000"
+            android:visibility="visible"
+            app:backgroundTint="#FFFFFF"
+            app:iconTint="#FAF4F4" />
+
+        <Button
+            android:id="@+id/button5"
+            android:layout_width="180dp"
+            android:layout_height="63dp"
+            android:layout_gravity="center"
+
+            android:layout_marginTop="32dp"
+            android:text="800 ml"
+            android:textColor="#000000"
+            android:visibility="visible"
+            app:backgroundTint="#FFFFFF"
+            app:iconTint="#FAF4F4" />
+
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,7 +1,14 @@
 package com.example.coffe_maker;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
@@ -9,19 +16,23 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import java.security.cert.CertPathBuilder;
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 public class Preparando extends AppCompatActivity {
 
-     CountDownTimer countDownTimer;
-     long timeLeftInMilliseconds = 100000;
-     long timeLeftInMilliseconds2 = 1;
-     boolean timeRunnng;
 
+    private static final String CHANNEL_ID = "33";
     TextView textView3;
     String data1;
     ProgressBar progressBar;
-    int data2 = 0, data3 = 0, i=0;
-    TextView text_view_progress;
+    int progress=100;
+
+    int seconds , minutes,secs, tempo ;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,76 +48,73 @@ public class Preparando extends AppCompatActivity {
             data1 = bundle.getString("quant");
             if(data1!=null)
                 try {
-                    //   timeLeftInMilliseconds = Integer.parseInt(data1);
+                       secs = Integer.parseInt(data1);
+                       tempo = secs;
                 } catch(NumberFormatException e){
-                    //Log.i();
                 }
+        }
 
+
+        
+        new MyCountDown(10000000, 1000);
 
         }
-       // timeLeftInMilliseconds = timeLeftInMilliseconds*1000;
-        starStop();
 
+    public class MyCountDown extends CountDownTimer
+    {
 
-
-
-        final Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (i<=100) {
-                 //   textView3.setText("" + i);
-                    progressBar.setProgress(i);
-                    i++;
-                    handler.postDelayed(this, 200);
-                } else{
-                    handler.removeCallbacks(this);
-                }
-            }
-        }, 200);
-
-
-    }
-    public void starStop(){
-        if (timeRunnng){
-            stopTimer();
-        }else {
-            starTimer();
+        long duration, interval;
+        public MyCountDown(long millisInFuture, long countDownInterval) {
+            super(millisInFuture, countDownInterval);
+            duration = millisInFuture;
+            interval = countDownInterval;
+            start();
         }
-    }
 
-    public void starTimer() {
-        countDownTimer = new CountDownTimer(timeLeftInMilliseconds, 1000) {
-            @Override
-            public void onTick(long timeLeftInMilliseconds2) {
-                timeLeftInMilliseconds = 1;
-                updateTimer();
+        @Override
+        public void onFinish() {
+        //    secs = 10;
+        }
+
+        @Override
+        public void onTick(long duration) {
+            textView3.setText(String.valueOf(secs));
+            secs = secs - 1;
+            minutes = secs / 60;
+            seconds = secs % 60;
+            textView3.setText(String.format("%02d", minutes)
+                    + ":" + String.format("%02d", seconds));
+
+            if (secs <= 0 ) {
+                cancel();
+                Toast.makeText(Preparando.this, "Café Pronto", Toast.LENGTH_LONG).show();
+                addNotification();
+                Intent intent4 = new Intent(Preparando.this, MainActivity.class );
+                startActivity(intent4);
             }
-            @Override
-            public void onFinish() {
-            }
-        }.start();
-        timeRunnng =true;
+
+            progress = ((secs*100)/tempo);
+            progressBar.setProgress(progress);
+        }
     }
 
+    private void addNotification() {
+        // Builds your notification
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
+                .setSmallIcon(R.mipmap.ic_launcher_round)
+                .setContentTitle("Coffe Maker")
+                .setContentText("Seu café está Pronto!")
+                .setAutoCancel(true)
+                .setDefaults(Notification.DEFAULT_ALL);
 
-        public void stopTimer(){
-            countDownTimer.cancel();
-            timeRunnng = false;
-        }
+        // Creates the intent needed to show the notification
+        Intent notificationIntent = new Intent(this, MainActivity.class);
+        PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        builder.setContentIntent(contentIntent);
 
-        public void updateTimer(){
-        int minutes = (int) timeLeftInMilliseconds / 60000;
-        int seconds = (int) timeLeftInMilliseconds % 60000 / 1000;
-
-        String timeLeftText;
-
-            timeLeftText = ""+ minutes;
-            timeLeftText += ":";
-            if (seconds < 10) timeLeftText += "0";
-            timeLeftText += seconds;
-
-            textView3.setText(timeLeftText);
-        }
+        // Add as notification
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        manager.notify(0, builder.build());
+    }
 }
 

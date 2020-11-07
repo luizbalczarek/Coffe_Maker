@@ -37,9 +37,6 @@ public class Ajustes extends AppCompatActivity {
 
     public void irTelaPreparando(View view){
         Intent intent4 = new Intent(Ajustes.this, Preparando.class );
-    //    Bundle bundle = new Bundle();
-    //    bundle.putString( "quant", quantidade);
-    //    intent4.putExtras(bundle);
         startActivity(intent4);
     }
 
@@ -161,7 +158,7 @@ public class Ajustes extends AppCompatActivity {
 
                     Intent intent5 = new Intent(Ajustes.this, Preparando.class );
                     Bundle bundle = new Bundle();
-                    bundle.putString( "quant", "800");
+                    bundle.putString( "quant", "740");
                     intent5.putExtras(bundle);
                     startActivity(intent5);
                     //startActivity(new Intent(Ajustes.this, Preparando.class));
@@ -171,21 +168,21 @@ public class Ajustes extends AppCompatActivity {
                 //    txtResul2.setText(resultado);
                     Intent intent5 = new Intent(Ajustes.this, Preparando.class );
                     Bundle bundle = new Bundle();
-                    bundle.putString( "quant", "600");
+                    bundle.putString( "quant", "555");
                     intent5.putExtras(bundle);
                     startActivity(intent5);
 
             } else if(resultado.contains("OK,400")){
                     Intent intent5 = new Intent(Ajustes.this, Preparando.class );
                     Bundle bundle = new Bundle();
-                    bundle.putString( "quant", "400");
+                    bundle.putString( "quant", "370");
                     intent5.putExtras(bundle);
                     startActivity(intent5);
 
                 }else if(resultado.contains("OK,200")){
                     Intent intent5 = new Intent(Ajustes.this, Preparando.class );
                     Bundle bundle = new Bundle();
-                    bundle.putString( "quant", "200");
+                    bundle.putString( "quant", "10");
                     intent5.putExtras(bundle);
                     startActivity(intent5);
 

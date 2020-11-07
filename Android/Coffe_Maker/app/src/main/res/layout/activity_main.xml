@@ -9,21 +9,6 @@
 
     >
 
-<!--    <Button-->
-<!--        android:id="@+id/btnLed1"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:text="LED 1"/>-->
-
-
-<!--    <TextView-->
-<!--        android:id="@+id/txtOi"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:textSize="35sp"-->
-<!--        android:layout_gravity="center"-->
-<!--        android:textColor="#FF0000"-->
-<!--        android:text="0"/>-->
 
     <ImageButton
         android:id="@+id/imageButton"
@@ -33,6 +18,7 @@
         android:scaleType="fitStart"
         android:layout_gravity="center"
         android:onClick="irTelaPreparo"
+        android:layout_marginTop="20dp"
         app:srcCompat="@drawable/make___copia" />
 
     <ImageButton
@@ -42,6 +28,7 @@
         android:layout_gravity="center"
         android:background="@android:color/transparent"
         android:onClick="irTelaCriarAgendamento"
+        android:layout_marginTop="16dp"
         android:scaleType="fitStart"
         app:srcCompat="@drawable/agendar___copia" />
 
@@ -52,6 +39,7 @@
         android:layout_gravity="center"
         android:background="@android:color/transparent"
         android:scaleType="fitStart"
+        android:layout_marginTop="16dp"
         app:srcCompat="@drawable/agenda___copia" />
 
 

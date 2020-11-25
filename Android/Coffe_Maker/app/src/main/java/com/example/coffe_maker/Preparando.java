@@ -102,7 +102,7 @@ public class Preparando extends AppCompatActivity {
         // Builds your notification
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
                 .setSmallIcon(R.mipmap.ic_launcher_round)
-                .setContentTitle("Coffe Maker")
+                .setContentTitle("Cafèolette")
                 .setContentText("Seu café está Pronto!")
                 .setAutoCancel(true)
                 .setDefaults(Notification.DEFAULT_ALL);

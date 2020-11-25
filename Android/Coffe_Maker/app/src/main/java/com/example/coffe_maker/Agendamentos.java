@@ -54,7 +54,7 @@ public class Agendamentos extends AppCompatActivity {
                 ConnectivityManager conMgr = (ConnectivityManager)
                         getSystemService(Context.CONNECTIVITY_SERVICE);
                 NetworkInfo networkInfo = conMgr.getActiveNetworkInfo();
-                String url= "http://192.168.0.180/get_agendamentos";
+                String url= "http://192.168.0.180:8081/get_agendamentos";
 
                 if(networkInfo != null && networkInfo.isConnected()){
                     new SolicitaDados().execute(url);
@@ -73,7 +73,7 @@ public class Agendamentos extends AppCompatActivity {
                 ConnectivityManager conMgr = (ConnectivityManager)
                         getSystemService(Context.CONNECTIVITY_SERVICE);
                 NetworkInfo networkInfo = conMgr.getActiveNetworkInfo();
-                String url= "http://192.168.0.180/del_age1";
+                String url= "http://192.168.0.180:8081/del_age1";
 
                 if(networkInfo != null && networkInfo.isConnected()){
                     new SolicitaDados().execute(url);
@@ -91,7 +91,7 @@ public class Agendamentos extends AppCompatActivity {
                 ConnectivityManager conMgr = (ConnectivityManager)
                         getSystemService(Context.CONNECTIVITY_SERVICE);
                 NetworkInfo networkInfo = conMgr.getActiveNetworkInfo();
-                String url= "http://192.168.0.180/del_age2";
+                String url= "http://192.168.0.180:8081/del_age2";
 
                 if(networkInfo != null && networkInfo.isConnected()){
                     new SolicitaDados().execute(url);
@@ -109,7 +109,7 @@ public class Agendamentos extends AppCompatActivity {
                 ConnectivityManager conMgr = (ConnectivityManager)
                         getSystemService(Context.CONNECTIVITY_SERVICE);
                 NetworkInfo networkInfo = conMgr.getActiveNetworkInfo();
-                String url= "http://192.168.0.180/del_age3";
+                String url= "http://192.168.0.180:8081/del_age3";
 
                 if(networkInfo != null && networkInfo.isConnected()){
                     new SolicitaDados().execute(url);

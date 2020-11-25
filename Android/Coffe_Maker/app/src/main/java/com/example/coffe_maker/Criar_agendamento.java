@@ -90,7 +90,7 @@ public class Criar_agendamento extends AppCompatActivity {
                     ConnectivityManager conMgr = (ConnectivityManager)
                             getSystemService(Context.CONNECTIVITY_SERVICE);
                     NetworkInfo networkInfo = conMgr.getActiveNetworkInfo();
-                    String url = "http://192.168.0.180/age_diasda:";
+                    String url = "http://192.168.0.180:8081/age_diasda:";
                     url = url + horaA;
                     url = url + quantidades;
 
@@ -116,7 +116,7 @@ public class Criar_agendamento extends AppCompatActivity {
                     ConnectivityManager conMgr = (ConnectivityManager)
                             getSystemService(Context.CONNECTIVITY_SERVICE);
                     NetworkInfo networkInfo = conMgr.getActiveNetworkInfo();
-                    String url = "http://192.168.0.180/age_sabado:";
+                    String url = "http://192.168.0.180:8081/age_sabado:";
                     url = url + horaA;
                     url = url + quantidades;
 
@@ -142,7 +142,7 @@ public class Criar_agendamento extends AppCompatActivity {
                     ConnectivityManager conMgr = (ConnectivityManager)
                             getSystemService(Context.CONNECTIVITY_SERVICE);
                     NetworkInfo networkInfo = conMgr.getActiveNetworkInfo();
-                    String url = "http://192.168.0.180/age_doming:";
+                    String url = "http://192.168.0.180:8081/age_doming:";
                     url = url + horaA;
                     url = url + quantidades;
                     if (networkInfo != null && networkInfo.isConnected()) {
@@ -166,7 +166,7 @@ public class Criar_agendamento extends AppCompatActivity {
                     ConnectivityManager conMgr = (ConnectivityManager)
                             getSystemService(Context.CONNECTIVITY_SERVICE);
                     NetworkInfo networkInfo = conMgr.getActiveNetworkInfo();
-                    String url = "http://192.168.0.180/age_finais:";
+                    String url = "http://192.168.0.180:8081/age_finais:";
                     url = url + horaA;
                     url = url + quantidades;
 

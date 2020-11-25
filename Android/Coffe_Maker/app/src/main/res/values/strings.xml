@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Coffe_Maker</string>
+    <string name="app_name">Caféolette</string>
 
     <string-array name="quantidades">
         <item>200 ml</item>

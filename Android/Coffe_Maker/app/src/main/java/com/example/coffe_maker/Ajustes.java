@@ -61,7 +61,7 @@ public class Ajustes extends AppCompatActivity {
                 ConnectivityManager conMgr = (ConnectivityManager)
                         getSystemService(Context.CONNECTIVITY_SERVICE);
                 NetworkInfo networkInfo = conMgr.getActiveNetworkInfo();
-                String url= "http://192.168.0.180/make_200";
+                String url= "http://192.168.0.180:8081/make_200";
 
                 if(networkInfo != null && networkInfo.isConnected()){
                     new SolicitaDados().execute(url);
@@ -79,7 +79,7 @@ public class Ajustes extends AppCompatActivity {
                 ConnectivityManager conMgr = (ConnectivityManager)
                         getSystemService(Context.CONNECTIVITY_SERVICE);
                 NetworkInfo networkInfo = conMgr.getActiveNetworkInfo();
-                String url= "http://192.168.0.180/make_400";
+                String url= "http://192.168.0.180:8081/make_400";
 
                 if(networkInfo != null && networkInfo.isConnected()){
 
@@ -100,7 +100,7 @@ public class Ajustes extends AppCompatActivity {
                 ConnectivityManager conMgr = (ConnectivityManager)
                         getSystemService(Context.CONNECTIVITY_SERVICE);
                 NetworkInfo networkInfo = conMgr.getActiveNetworkInfo();
-                String url= "http://192.168.0.180/make_600";
+                String url= "http://192.168.0.180:8081/make_600";
 
                 if(networkInfo != null && networkInfo.isConnected()){
                     new SolicitaDados().execute(url);
@@ -118,15 +118,11 @@ public class Ajustes extends AppCompatActivity {
                 ConnectivityManager conMgr = (ConnectivityManager)
                         getSystemService(Context.CONNECTIVITY_SERVICE);
                 NetworkInfo networkInfo = conMgr.getActiveNetworkInfo();
-                String url= "http://192.168.0.180/make_800";
+                String url= "http://192.168.0.180:8081/make_800";
 
                 if(networkInfo != null && networkInfo.isConnected()){
                      new SolicitaDados().execute(url);
 
-                    //if (quantidade == 800) {
-                    //    button5.setText("OK");
-                        //  Navigation.findNavController(view).navigate(R.id.preparando);
-                  //  }
 
                 }else {
                     Toast.makeText(Ajustes.this, "Nenhuma conexão foi detectada", Toast.LENGTH_LONG).show();
@@ -158,7 +154,7 @@ public class Ajustes extends AppCompatActivity {
 
                     Intent intent5 = new Intent(Ajustes.this, Preparando.class );
                     Bundle bundle = new Bundle();
-                    bundle.putString( "quant", "740");
+                    bundle.putString( "quant", "450");
                     intent5.putExtras(bundle);
                     startActivity(intent5);
                     //startActivity(new Intent(Ajustes.this, Preparando.class));
@@ -168,21 +164,21 @@ public class Ajustes extends AppCompatActivity {
                 //    txtResul2.setText(resultado);
                     Intent intent5 = new Intent(Ajustes.this, Preparando.class );
                     Bundle bundle = new Bundle();
-                    bundle.putString( "quant", "555");
+                    bundle.putString( "quant", "360");
                     intent5.putExtras(bundle);
                     startActivity(intent5);
 
             } else if(resultado.contains("OK,400")){
                     Intent intent5 = new Intent(Ajustes.this, Preparando.class );
                     Bundle bundle = new Bundle();
-                    bundle.putString( "quant", "370");
+                    bundle.putString( "quant", "270");
                     intent5.putExtras(bundle);
                     startActivity(intent5);
 
                 }else if(resultado.contains("OK,200")){
                     Intent intent5 = new Intent(Ajustes.this, Preparando.class );
                     Bundle bundle = new Bundle();
-                    bundle.putString( "quant", "10");
+                    bundle.putString( "quant", "180");
                     intent5.putExtras(bundle);
                     startActivity(intent5);
 

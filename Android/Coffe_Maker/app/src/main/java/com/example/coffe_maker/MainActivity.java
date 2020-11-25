@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
                 ConnectivityManager conMgr = (ConnectivityManager)
                         getSystemService(Context.CONNECTIVITY_SERVICE);
                 NetworkInfo networkInfo = conMgr.getActiveNetworkInfo();
-                String url= "http://192.168.0.180/get_agendamentos";
+                String url= "http://192.168.0.180:8081/get_agendamentos";
 
                 if(networkInfo != null && networkInfo.isConnected()){
                     new SolicitaDados().execute(url);

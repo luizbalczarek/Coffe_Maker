@@ -1,6 +1,5 @@
 #include "Arduino.h"
 #include <FS.h>
-#include "Free_Fonts.h" 
 #include <SPI.h>
 #include <TFT_eSPI.h> // Hardware-specific library
 #include <stdio.h>
@@ -16,15 +15,22 @@
 #include "menu5.h"
 #include "menu6.h"
 #include <locale.h>
-
-
-
-
+#include "fauxmoESP.h"
+#include <EEPROM.h>
 #include <TJpg_Decoder.h>
 
-#define USE_DMA
 
-  
+
+
+#define EEPROM_SIZE 200
+//const char* ssid     = "embarcados";
+//const char* password = "embarcados";
+
+#define WIFI_SSID "embarcados"
+#define WIFI_PASS "embarcados"
+
+
+#define USE_DMA
 #ifdef USE_DMA
   uint16_t  dmaBuffer1[16*16]; // Toggle buffer for 16*16 MCU block, 512bytes
   uint16_t  dmaBuffer2[16*16]; // Toggle buffer for 16*16 MCU block, 512bytes
@@ -32,10 +38,10 @@
   bool dmaBufferSel = 0;
 #endif
 
-
+fauxmoESP fauxmo;
 
 RTC_DS3231 rtc;
-char diasDaSemana[7][12] = {"Dom", "Seg", "Ter", "Quar", "Quin", "Sex", "Sáb"};
+char diasDaSemana[7][12] = {"Dom", "Seg", "Ter", "Quar", "Quin", "Sex", "Sab"};
 String timeChar, timeChar2, diaN, diaS;
 char dateChar[50];
 char temperatureChar[10];
@@ -52,6 +58,11 @@ IPAddress gateway(192, 168, 0, 1);
 IPAddress subnet(255, 255, 255, 0);
 IPAddress dns(192, 168, 0, 1);
 
+const char* ssid     = "embarcados";
+const char* password = "embarcados";
+//#define WIFI_SSID "embarcados"
+//#define WIFI_PASS "embarcados"
+
 // This is the file name used to store the touch coordinate
 // calibration data. Cahnge the name to start a new calibration.
 #define CALIBRATION_FILE "/TouchCalData3"
@@ -61,32 +72,33 @@ IPAddress dns(192, 168, 0, 1);
 // Repeat calibration if you change the screen rotation.
 #define REPEAT_CAL false
 
-#define led1 14 
-
-const int q800 = 740;
-const int q600 = 555;
-const int q400 = 370;
-const int q200 = 185;
 
 
-//boolean SwitchOn = false;
-
-const char* ssid     = "embarcados";
-const char* password = "embarcados";
-
-
+const int q800 = 450;
+const int q600 = 360;
+const int q400 = 270;
+const int q200 = 180;
 
 uint8_t rec_value= 0;
 String inChar;
 int i, hs, mi, quantidade;
 int releRes = 25, releAgua= 33;
+int alexa = 14;
+int value = 0;
+int statusMenu = 1;
+uint8_t  diasTemp;
+uint8_t  horaTemp;
+uint8_t  minutoTemp;
+int  quantidadeTemp;
+int tempoTemp;
+
 
 
 const int oneWireBus = 27;  // GPIO where the DS18B20 is connected to
 OneWire oneWire(oneWireBus); // Setup a oneWire instance to communicate with any OneWire devices
 DallasTemperature sensors(&oneWire); // Pass our oneWire reference to Dallas Temperature sensor 
 
-WiFiServer server(80);
+WiFiServer server(8081);
 
 
 // This next function will be called during decoding of the jpeg file to render each
@@ -119,34 +131,13 @@ bool tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap)
   return 1;
 }
 
-
-
-// Comment out to stop drawing black spots
-#define BLACK_SPOT
-//
-//// Switch position and size
-//#define FRAME_X 100
-//#define FRAME_Y 64
-//#define FRAME_W 120
-//#define FRAME_H 50
-//
-//// Red zone size
-//#define REDBUTTON_X FRAME_X
-//#define REDBUTTON_Y FRAME_Y
-//#define REDBUTTON_W (FRAME_W/2)
-//#define REDBUTTON_H FRAME_H
-//
-//// Green zone size
-//#define GREENBUTTON_X (REDBUTTON_X + REDBUTTON_W)
-//#define GREENBUTTON_Y FRAME_Y
-//#define GREENBUTTON_W (FRAME_W/2)
-//#define GREENBUTTON_H FRAME_H
+#define ID_1 "Cafeteira"
 #define MAX 3
 
 struct Agendamentos{
-            uint8_t  diasAgenda;
-            uint8_t  horaAgenda;
-            uint8_t  minutoAgenda;
+            int  diasAgenda;
+            int  horaAgenda;
+            int  minutoAgenda;
             int  quantidadeAgenda;
             int tempoAgenda;
             
@@ -164,10 +155,69 @@ void setup(void)
   touch_calibrate();
 
   setlocale(LC_ALL, "Portuguese");
+  
+  EEPROM.begin(EEPROM_SIZE);
 
-  a1.diasAgenda = 0;
-  a2.diasAgenda = 0;
-  a3.diasAgenda = 0;
+ 
+  a1.diasAgenda = EEPROM.read(0);
+  a1.horaAgenda = EEPROM.read(1);
+  a1.minutoAgenda = EEPROM.read(2);
+//  a1.quantidadeAgenda = EEPROM.read(3);
+  
+  if (EEPROM.read(3) == 1){
+    a1.tempoAgenda = q200;
+    a1.tempoAgenda = 200;
+  }else if (EEPROM.read(3) == 2){
+    a1.tempoAgenda = q400;
+    a1.tempoAgenda = 400;
+  }else if (EEPROM.read(3) == 3){
+    a1.tempoAgenda = q600;
+    a1.tempoAgenda = 600;
+  }else if (EEPROM.read(3) == 4){
+    a1.tempoAgenda = q800;
+    a1.tempoAgenda = 800;
+  }
+  
+  
+  a2.diasAgenda = EEPROM.read(5);
+  a2.horaAgenda = EEPROM.read(6);
+  a2.minutoAgenda = EEPROM.read(7);
+//  a2.quantidadeAgenda = EEPROM.read(8);
+  
+    if (EEPROM.read(8) == 1){
+    a2.tempoAgenda = q200;
+    a2.tempoAgenda = 200;
+  }else if (EEPROM.read(8) == 2){
+    a2.tempoAgenda = q400;
+    a2.tempoAgenda = 400;
+  }else if (EEPROM.read(8) == 3){
+    a2.tempoAgenda = q600;
+    a2.tempoAgenda = 600;
+  }else if (EEPROM.read(8) == 4){
+    a2.tempoAgenda = q800;
+    a2.tempoAgenda = 800;
+  }
+
+
+  a3.diasAgenda = EEPROM.read(10);
+  a3.horaAgenda = EEPROM.read(11);
+  a3.minutoAgenda = EEPROM.read(12);
+//  a3.quantidadeAgenda = EEPROM.read(13);
+
+    if (EEPROM.read(13) == 1){
+    a3.tempoAgenda = q200;
+    a3.tempoAgenda = 200;
+  }else if (EEPROM.read(13) == 2){
+    a3.tempoAgenda = q400;
+    a3.tempoAgenda = 400;
+  }else if (EEPROM.read(13) == 3){
+    a3.tempoAgenda = q600;
+    a3.tempoAgenda = 600;
+  }else if (EEPROM.read(13) == 4){
+    a3.tempoAgenda = q800;
+    a3.tempoAgenda = 800;
+  }
+  
   
   // clear screen
   tft.fillScreen(0x0000);
@@ -189,12 +239,13 @@ void setup(void)
 
     
     pinMode(32, OUTPUT); 
-    
     pinMode(releRes, OUTPUT);
+    digitalWrite(releRes, LOW);
     pinMode(releAgua, OUTPUT);
+    digitalWrite(releAgua, LOW);
+    pinMode(alexa, OUTPUT);
+    digitalWrite(alexa, LOW);
  
-    pinMode(led1, OUTPUT);
-//    digitalWrite(14,0); //inverter valor rele
     
     sensors.begin();
     
@@ -202,8 +253,8 @@ void setup(void)
 
     // We start by connecting to a WiFi network
 
-    Serial.println();
-    Serial.println();
+//    Serial.println();
+//    Serial.println();
     Serial.print("Connecting to ");
     Serial.println(ssid);
 
@@ -219,6 +270,26 @@ void setup(void)
     Serial.println("WiFi connected.");
     Serial.println("IP address: ");
     Serial.println(WiFi.localIP());
+
+  // Set WIFI module to STA mode
+ //   WiFi.mode(WIFI_STA);
+
+    // Connect
+//    Serial.printf("[WIFI] Connecting to %s ", WIFI_SSID);
+//    WiFi.config(ip, dns, gateway, subnet);
+//    WiFi.begin(WIFI_SSID, WIFI_PASS);
+//
+//    // Wait
+//    while (WiFi.status() != WL_CONNECTED) {
+//        Serial.print(".");
+//        delay(100);
+//    }
+//    Serial.println();
+//
+//    // Connected!
+//    Serial.printf("[WIFI] STATION Mode, SSID: %s, IP address: %s\n", WiFi.SSID().c_str(), WiFi.localIP().toString().c_str());
+
+    
     
     server.begin();
       if (! rtc.begin()) {
@@ -236,52 +307,57 @@ void setup(void)
         // January 21, 2014 at 3am you would call:
        // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
      }
-    
-  // Draw button (this example does not use library Button class)
+
+
+    fauxmo.createServer(true); // not needed, this is the default value
+    fauxmo.setPort(80); // This is required for gen3 devices
+    fauxmo.enable(true);
+    // Add virtual devices
+    fauxmo.addDevice(ID_1);
+
+    fauxmo.onSetState([](unsigned char device_id, const char * device_name, bool state, unsigned char value) {
+        
+        Serial.printf("[MAIN] Device #%d (%s) state: %s value: %d\n", device_id, device_name, state ? "ON" : "OFF", value);
+        if (strcmp(device_name, ID_1)==0) {
+            digitalWrite(alexa, state ? HIGH : LOW);
+                    }
+    }); 
+
   mainMenu();
 }
+
+
 //------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------
-int value = 0;
-int statusMenu = 1;
-uint8_t  diasTemp;
-uint8_t  horaTemp;
-uint8_t  minutoTemp;
-int  quantidadeTemp;
-int tempoTemp;
+
 
 void loop()
 {
   uint16_t x, y, z;
-  WiFiClient client = server.available();   // listen for incoming clients
+  
   DateTime now = rtc.now();
   minuteNow = now.minute();
   horaNow = now.hour();
   diaNow = now.dayOfTheWeek();
 
-  
-              
+  fauxmo.handle();
+  delay(10);
+                
   tft.getTouchRaw(&x, &y);
   z = tft.getTouchRawZ();
 //  Serial.printf("x: %i     ", x);
 //  Serial.printf("y: %i     ", y);
 //  Serial.printf("z: %i     ", z);
 
-  
-//  Serial.println(statusMenu);
-  delay(10);
+  if (digitalRead(alexa) == HIGH){
+      preparaCafe(800); 
+    }
 
-//  Serial.println(statusMenu);
-
-  if (verificaAlarme(a1, a2, a3, minuteNow, horaNow, diaNow) == 1) {
-    Serial.println("Run Bitch, tem café pra passar!");
     
+  if (verificaAlarme(a1, a2, a3, minuteNow, horaNow, diaNow) == 1) {  
     preparaCafe(a1.tempoAgenda);
   } else if (verificaAlarme(a1, a2, a3, minuteNow, horaNow, diaNow) == 2) {
-    Serial.println("Run Bitch, tem café pra passar!");
     preparaCafe(a2.tempoAgenda);
   } else if (verificaAlarme(a1, a2, a3, minuteNow, horaNow, diaNow) == 3) {
-    Serial.println("Run Bitch, tem café pra passar!");
     preparaCafe(a3.tempoAgenda);
   }
 
@@ -323,7 +399,7 @@ void loop()
         }
 
       } else if (statusMenu == 2) {
-//        mainMenu2();
+
         if ((x > 3400) && (x < 3675)) {
           if ((y > 440) && (y < 680)) {
             Serial.println("Home");
@@ -344,7 +420,7 @@ void loop()
             quantidade = q400;
             tempo = 370;
             preparaCafe(tempo);
-            //mainMenu3();
+
           }
 
         } else if ((x > 0) && (x < 1750) && (z > 400)) //verifica quantidade
@@ -353,14 +429,14 @@ void loop()
             quantidade = q600;
             tempo = 555;
             preparaCafe(tempo);
-            //mainMenu3();
+
           }
           if ((y > 850) && (y < 2180)) //quantidade
           {
             quantidade = q800;
             tempo = 740;
             preparaCafe(tempo);
-            //mainMenu3();
+
           }
         }
         Serial.println(quantidade);
@@ -369,7 +445,7 @@ void loop()
         //  mainMenu3();
 
       } else if (statusMenu == 4) {
-//        mainMenu4();
+
          if ((x > 3400) && (x < 3675)) {
           if ((y > 440) && (y < 680)) {
             Serial.println("Home");
@@ -413,13 +489,14 @@ void loop()
           mainMenu6(minuteNow2, horaNow2);
         if ((x > 2050) && (x < 2500) && (z > 400)) //verifica o hora ou minuto +
         {
-          if ((y > 3030) && (y < 3330)) //verifica o hora +
+          if ((y > 3030) && (y < 3330) && (z > 400)) //verifica o hora +
           {
             if (horaNow2 < 23) {
               horaNow2 = horaNow2 + 1;
             } else {
               horaNow2 = 00;
             }
+            mainMenu6(minuteNow2, horaNow2);
 
           } else if ((y > 2000) && (y < 2320)) //verifica o minuto +
           {
@@ -432,13 +509,14 @@ void loop()
           }
         } else if ((x > 0) && (x < 690) && (z > 400)) //verifica o hora ou minuto -
         {
-          if ((y > 3030) && (y < 3330)) //verifica o hora -
+          if ((y > 3030) && (y < 3330) && (z > 400)) //verifica o hora -
           {
             if (horaNow2 > 0) {
               horaNow2 = horaNow2 - 1;
             } else {
               horaNow2 = 23;
             }
+            mainMenu6(minuteNow2, horaNow2);
 
           } else if ((y > 2000) && (y < 2320)) //verifica o minuto -
           {
@@ -454,7 +532,7 @@ void loop()
             Serial.println("Home 1");
             statusMenu = 1;
             mainMenu();
-            //                     Serial.println(statusMenu);
+
           }
 
         } else if ((x > 2620) && (x < 3100) && (z > 400)) {
@@ -464,7 +542,7 @@ void loop()
             horaTemp = horaNow2;
             statusMenu = 7;
             mainMenu2();
-            //                     Serial.println(statusMenu);
+
           }  
         }
         
@@ -483,6 +561,9 @@ void loop()
             if ((x > 2410) && (x < 3100)) {
               
               a1.diasAgenda = 0;
+              EEPROM.write(0, 0);
+              EEPROM.commit();
+              
               tft.fillScreen(TFT_WHITE);
               tft.setTextColor(TFT_BLACK);
               tft.setTextSize(2);
@@ -493,6 +574,9 @@ void loop()
             }else if ((x > 1480) && (x < 2150)) {
               
               a2.diasAgenda = 0;
+              EEPROM.write(5, 0);
+              EEPROM.commit();
+              
               tft.fillScreen(TFT_WHITE);
               tft.setTextColor(TFT_BLACK);
               tft.setTextSize(2);
@@ -503,6 +587,9 @@ void loop()
             }else if ((x > 500) && (x < 1170)) {
               
               a3.diasAgenda = 0;
+              EEPROM.write(10, 0);
+              EEPROM.commit();
+              
               tft.fillScreen(TFT_WHITE);
               tft.setTextColor(TFT_BLACK);
               tft.setTextSize(2);
@@ -538,7 +625,6 @@ void loop()
               criaAgendamento(  diasTemp,  horaTemp,  minutoTemp,  quantidadeTemp  , tempoTemp, &a1, &a2, &a3);
               mainMenu();
 
-              //mainMenu3();
             }
 
           } else if ((x > 0) && (x < 1750) && (z > 400)) //verifica quantidade
@@ -549,7 +635,6 @@ void loop()
               criaAgendamento(  diasTemp,  horaTemp,  minutoTemp,  quantidadeTemp  , tempoTemp, &a1, &a2, &a3);
               mainMenu();
 
-              //mainMenu3();
             }
             if ((y > 850) && (y < 2180)) //quantidade
             {
@@ -558,7 +643,6 @@ void loop()
               criaAgendamento(  diasTemp,  horaTemp,  minutoTemp,  quantidadeTemp  , tempoTemp, &a1, &a2, &a3);
               mainMenu();
 
-              //mainMenu3();
             }
           }
 
@@ -566,44 +650,10 @@ void loop()
 
       }
 
-            
-           
-          
-          
-
-
-   
-//    Serial.print(now.year(), DEC);
-//    Serial.print('/');
-//    Serial.print(now.month(), DEC);
-//    Serial.print('/');
-//    Serial.print(now.day(), DEC);
-//    Serial.print(" (");
-//    Serial.print(daysOfTheWeek[now.dayOfTheWeek()]);
-//    Serial.print(") ");
-//    Serial.print(now.hour(), DEC);
-//    Serial.print(':');
-//    Serial.print(now.minute(), DEC);
-//    hs = now.hour();
-//    mi = now.minute();
-//
-//    Serial.println(hs);
-//    Serial.println(mi);
-//    
-//
-//    Serial.println();
-  
-
-    //if (statusMenu == 1){
-      
-    //}
-    
+    WiFiClient client = server.available();   // listen for incoming clients
     if (client) {                             // if you get a client,
     Serial.println("New Client.");           // print a message out the serial port
         
-//      int luminosidade = 100;
-
-//       delay(4000);
 
         String retorno;
         String request = client.readStringUntil('\r');
@@ -618,64 +668,61 @@ void loop()
         if (request.indexOf(F("make_800")) != -1) {
           Serial.println("Preapara 800 ml de café");  
           preparoApp = q800;
-          client.println("OK,800");
-          // delay(200);           
+          client.println("OK,800");         
         } 
 
         if (request.indexOf(F("make_600")) != -1) {
           Serial.println("Preapara 600 ml de café");  
           preparoApp = q600;
           client.println("OK,600");
-          // delay(200);           
         } 
 
         if (request.indexOf(F("make_400")) != -1) {
           Serial.println("Preapara 400 ml de café");  
           preparoApp = q400;
-          client.println("OK,400");
-          // delay(200);           
+          client.println("OK,400");         
         } 
 
         if (request.indexOf(F("make_200")) != -1) {
           Serial.println("Preapara 200 ml de café");  
           preparoApp = q200;
-          client.println("OK,200");
-          // delay(200);           
+          client.println("OK,200");     
         } 
 
 
 
         if (request.indexOf(F("get_agendamentos")) != -1) {
           Serial.println("pegando Agendamentos");  
-         // preparoApp = q200;
           retorno = retornaAgendamentoApp(a1, a2, a3);
           Serial.println(retorno);
-          client.println(retorno);
-          // delay(200);           
+          client.println(retorno);          
         }
 
        if (request.indexOf(F("del_age1")) != -1) {  
           a1.diasAgenda = 0;
+          EEPROM.write(0, 0);
+          EEPROM.commit();
           retorno = retornaAgendamentoApp(a1, a2, a3);
           Serial.println(retorno);
-          client.println(retorno);
-          // delay(200);           
+          client.println(retorno);         
         }
 
           if (request.indexOf(F("del_age2")) != -1) {  
           a2.diasAgenda = 0;
+          EEPROM.write(5, 0);
+          EEPROM.commit();
           retorno = retornaAgendamentoApp(a1, a2, a3);
           Serial.println(retorno);
-          client.println(retorno);
-          // delay(200);           
+          client.println(retorno);           
         }
 
           if (request.indexOf(F("del_age3")) != -1) {  
           a3.diasAgenda = 0;
+          EEPROM.write(10, 0);
+          EEPROM.commit();
           retorno = retornaAgendamentoApp(a1, a2, a3);
           Serial.println(retorno);
-          client.println(retorno);
-          // delay(200);           
+          client.println(retorno);         
         }
 
 
@@ -730,47 +777,7 @@ void loop()
            
         }
 
-       // Serial.println(request);
-        
-//          client.println("Oi");
-
-
-  //  Serial.println(F("Disconnecting from client"));
-  
-    }
-    
-  
-  // See if there's any touch data for us
-
-
-
-//
-
-  
-//   if (tft.getTouch(&x, &y))
-//  {
-    // Draw a block spot to show where touch was calculated to be
-//    #ifdef BLACK_SPOT
-//      tft.fillCircle(x, y, 2, TFT_BLACK);
-//    #endif
-    
-
-
-  
-
-//    else //Record is off (SwitchOn == false)
-//    {
-//      if ((x > GREENBUTTON_X) && (x < (GREENBUTTON_X + GREENBUTTON_W))) {
-//        if ((y > GREENBUTTON_Y) && (y <= (GREENBUTTON_Y + GREENBUTTON_H))) {
-//          Serial.println("Green btn hit");
-//          greenBtn();
-//        }
-//      }
-//    }
-//
-//    Serial.println(SwitchOn);
-//
-//  }
+}
 }
 //------------------------------------------------------------------------------------------
 
@@ -857,15 +864,23 @@ void mainMenu()
               
               String diaS= "";
               String diaN= "";
-
+              
+               if(now.day() < 10)
+              {
+                 diaN = diaN+"0"+String(now.day());
+                }else
+              {
               diaN = diaN+String(now.day());
+
+              }
             //  Serial.println(diaN);
             //  Serial.println(now.day());
-              
+
+
               diaS = diaS+String(diasDaSemana[now.dayOfTheWeek()]);
-              
-              Serial.println(diaS);
-              Serial.println(diasDaSemana[now.dayOfTheWeek()]);
+             
+       //       Serial.println(diaS);
+       //       Serial.println(diasDaSemana[now.dayOfTheWeek()]);
               
               if(minuteNow!=minutePrevious)
             {
@@ -1032,23 +1047,24 @@ void  mainMenu4()
 
 void  mainMenu5(struct Agendamentos a1s, struct Agendamentos a2s, struct Agendamentos a3s)
 {
-
   uint16_t w = 0, h = 0;
   statusMenu = 5;
+
+
+
+  
   TJpgDec.getJpgSize(&w, &h, menu5, sizeof(menu5));
-  // Must use startWrite first so TFT chip select stays low during DMA and SPI channel settings remain configured
   tft.startWrite();
-  // Draw the image, top left at 0,0 - DMA request is handled in the call-back tft_output() in this sketch
   TJpgDec.drawJpg(0, 0, menu5, sizeof(menu5));
-  // Must use endWrite to release the TFT chip select and release the SPI channel
   tft.endWrite();
   
   if (a1s.diasAgenda == 0 ){
           tft.setTextColor(TFT_BLACK);
           tft.setTextSize(2);
           tft.drawString("Vazio",20,60);
-    } else if (a1s.diasAgenda == 5) {
-              String hoursd= "";
+    } else if (a1s.diasAgenda != 0) {
+              
+             String hoursd= "";
               if(a1s.horaAgenda<10)
               {
                  hoursd = hoursd+"0"+String(a1s.horaAgenda);
@@ -1063,81 +1079,29 @@ void  mainMenu5(struct Agendamentos a1s, struct Agendamentos a2s, struct Agendam
               {
                 hoursd = hoursd+":"+String(a1s.minutoAgenda);
               }
+                  
           tft.setTextColor(TFT_BLACK);
           tft.setTextSize(2);
-          tft.drawString("Dias da Semana",20,60);
           tft.drawString(hoursd,213,60);
-      
+          
+          if (a1s.diasAgenda == 5){
+            tft.drawString("Dias da Semana",20,60);
       }else if (a1s.diasAgenda == 6) {
-              String hoursd= "";
-              if(a1s.horaAgenda<10)
-              {
-                 hoursd = hoursd+"0"+String(a1s.horaAgenda);
-                }else
-              {
-                hoursd = hoursd+""+String(a1s.horaAgenda);
-              }
-              if(a1s.minutoAgenda<10)
-              {
-                hoursd = hoursd+":0"+String(a1s.minutoAgenda);
-              }else
-              {
-                hoursd = hoursd+":"+String(a1s.minutoAgenda);
-              }
-          tft.setTextColor(TFT_BLACK);
-          tft.setTextSize(2);
           tft.drawString("Sábados",20,60);
-          tft.drawString(hoursd,213,60);
-      
       }else if (a1s.diasAgenda == 7) {
-              String hoursd= "";
-              if(a1s.horaAgenda<10)
-              {
-                 hoursd = hoursd+"0"+String(a1s.horaAgenda);
-                }else
-              {
-                hoursd = hoursd+""+String(a1s.horaAgenda);
-              }
-              if(a1s.minutoAgenda<10)
-              {
-                hoursd = hoursd+":0"+String(a1s.minutoAgenda);
-              }else
-              {
-                hoursd = hoursd+":"+String(a1s.minutoAgenda);
-              }
-          tft.setTextColor(TFT_BLACK);
-          tft.setTextSize(2);
           tft.drawString("Domingos",20,60);
-          tft.drawString(hoursd,213,60);
-      
-      }else if (a1s.diasAgenda == 8) {
-              String hoursd= "";
-              if(a1s.horaAgenda<10)
-              {
-                 hoursd = hoursd+"0"+String(a1s.horaAgenda);
-                }else
-              {
-                hoursd = hoursd+""+String(a1s.horaAgenda);
-              }
-              if(a1s.minutoAgenda<10)
-              {
-                hoursd = hoursd+":0"+String(a1s.minutoAgenda);
-              }else
-              {
-                hoursd = hoursd+":"+String(a1s.minutoAgenda);
-              }
-          tft.setTextColor(TFT_BLACK);
-          tft.setTextSize(2);
+      }else if (a1s.diasAgenda == 8) {      
           tft.drawString("Finais de semana",10,60);
-          tft.drawString(hoursd,213,60);
-      
       }
+    }
 
     if (a2s.diasAgenda == 0 ){
           tft.setTextColor(TFT_BLACK);
           tft.setTextSize(2);
           tft.drawString("Vazio",20,130);
-    } else if (a2s.diasAgenda == 5) {
+//    } else if (a2s.diasAgenda != 0) {
+      } else {
+    
               String hoursd= "";
               if(a2s.horaAgenda<10)
               {
@@ -1155,79 +1119,25 @@ void  mainMenu5(struct Agendamentos a1s, struct Agendamentos a2s, struct Agendam
               }
           tft.setTextColor(TFT_BLACK);
           tft.setTextSize(2);
-          tft.drawString("Dias da Semana",20,130);
           tft.drawString(hoursd,213,130);
-      
-      }else if (a2s.diasAgenda == 6) {
-              String hoursd= "";
-              if(a2s.horaAgenda<10)
-              {
-                 hoursd = hoursd+"0"+String(a2s.horaAgenda);
-                }else
-              {
-                hoursd = hoursd+""+String(a2s.horaAgenda);
-              }
-              if(a2s.minutoAgenda<10)
-              {
-                hoursd = hoursd+":0"+String(a2s.minutoAgenda);
-              }else
-              {
-                hoursd = hoursd+":"+String(a2s.minutoAgenda);
-              }
-          tft.setTextColor(TFT_BLACK);
-          tft.setTextSize(2);
+
+          
+          if (a2s.diasAgenda == 5){
+            tft.drawString("Dias da Semana",20,130);
+             }else if (a2s.diasAgenda == 6) { 
           tft.drawString("Sábados",20,130);
-          tft.drawString(hoursd,213,130);
-      
-      }else if (a2s.diasAgenda == 7) {
-              String hoursd= "";
-              if(a2s.horaAgenda<10)
-              {
-                 hoursd = hoursd+"0"+String(a2s.horaAgenda);
-                }else
-              {
-                hoursd = hoursd+""+String(a2s.horaAgenda);
-              }
-              if(a2s.minutoAgenda<10)
-              {
-                hoursd = hoursd+":0"+String(a2s.minutoAgenda);
-              }else
-              {
-                hoursd = hoursd+":"+String(a2s.minutoAgenda);
-              }
-          tft.setTextColor(TFT_BLACK);
-          tft.setTextSize(2);
+      }else if (a2s.diasAgenda == 7) {    
           tft.drawString("Domingos",20,130);
-          tft.drawString(hoursd,213,130);
-      
-      }else if (a2s.diasAgenda == 8) {
-              String hoursd= "";
-              if(a2s.horaAgenda<10)
-              {
-                 hoursd = hoursd+"0"+String(a2s.horaAgenda);
-                }else
-              {
-                hoursd = hoursd+""+String(a2s.horaAgenda);
-              }
-              if(a2s.minutoAgenda<10)
-              {
-                hoursd = hoursd+":0"+String(a2s.minutoAgenda);
-              }else
-              {
-                hoursd = hoursd+":"+String(a2s.minutoAgenda);
-              }
-          tft.setTextColor(TFT_BLACK);
-          tft.setTextSize(2);
+      }else if (a2s.diasAgenda == 8) {        
           tft.drawString("Finais de semana",10,130);
-          tft.drawString(hoursd,213,130);
-      
+      }
       }
     
     if (a3s.diasAgenda == 0 ){
           tft.setTextColor(TFT_BLACK);
           tft.setTextSize(2);
           tft.drawString("Vazio",20,200);
-    }  else if (a3s.diasAgenda == 5) {
+    }  else  {
               String hoursd= "";
               if(a3s.horaAgenda<10)
               {
@@ -1245,83 +1155,28 @@ void  mainMenu5(struct Agendamentos a1s, struct Agendamentos a2s, struct Agendam
               }
           tft.setTextColor(TFT_BLACK);
           tft.setTextSize(2);
-          tft.drawString("Dias da Semana",20,200);
           tft.drawString(hoursd,213,200);
-      
-      }else if (a3s.diasAgenda == 6) {
-              String hoursd= "";
-              if(a3s.horaAgenda<10)
-              {
-                 hoursd = hoursd+"0"+String(a3s.horaAgenda);
-                }else
-              {
-                hoursd = hoursd+""+String(a3s.horaAgenda);
-              }
-              if(a3s.minutoAgenda<10)
-              {
-                hoursd = hoursd+":0"+String(a3s.minutoAgenda);
-              }else
-              {
-                hoursd = hoursd+":"+String(a3s.minutoAgenda);
-              }
-          tft.setTextColor(TFT_BLACK);
-          tft.setTextSize(2);
-          tft.drawString("Sábados",20,200);
-          tft.drawString(hoursd,213,200);
-      
-      }else if (a3s.diasAgenda == 7) {
-              String hoursd= "";
-              if(a3s.horaAgenda<10)
-              {
-                 hoursd = hoursd+"0"+String(a3s.horaAgenda);
-                }else
-              {
-                hoursd = hoursd+""+String(a3s.horaAgenda);
-              }
-              if(a3s.minutoAgenda<10)
-              {
-                hoursd = hoursd+":0"+String(a3s.minutoAgenda);
-              }else
-              {
-                hoursd = hoursd+":"+String(a3s.minutoAgenda);
-              }
-          tft.setTextColor(TFT_BLACK);
-          tft.setTextSize(2);
+
+         if (a3s.diasAgenda == 5){
+                tft.drawString("Dias da Semana",20,200);
+       
+      }else if (a3s.diasAgenda == 6) {    
+          tft.drawString("Sabados",20,200);
+      }else if (a3s.diasAgenda == 7) {     
           tft.drawString("Domingos",20,200);
-          tft.drawString(hoursd,213,200);
-      
       }else if (a3s.diasAgenda == 8) {
-              String hoursd= "";
-              if(a3s.horaAgenda<10)
-              {
-                 hoursd = hoursd+"0"+String(a3s.horaAgenda);
-                }else
-              {
-                hoursd = hoursd+""+String(a3s.horaAgenda);
-              }
-              if(a3s.minutoAgenda<10)
-              {
-                hoursd = hoursd+":0"+String(a3s.minutoAgenda);
-              }else
-              {
-                hoursd = hoursd+":"+String(a3s.minutoAgenda);
-              }
-          tft.setTextColor(TFT_BLACK);
-          tft.setTextSize(2);
           tft.drawString("Finais de semana",10,200);
-          tft.drawString(hoursd,213,200);
-      
       }
-  
+    }
 
 }
+
 
 void  preparaCafe(int temps)
 {
 
   int tempAgua=80;
   int botao = 2;
-  bool pausar = 0;
   int i=0;
 
 
@@ -1330,58 +1185,17 @@ void  preparaCafe(int temps)
   sensors.requestTemperatures();
   float tempC = sensors.getTempCByIndex(0);
 
-
   
   mainMenu3(temps, tempC);
   digitalWrite(releRes,1);
   temps = temps - 1; 
 
-//  Serial.println("Botão antes:");
-//  Serial.println(botao);
   botao = checaBotao();
-
-//  Serial.println("Botão Depois:");
-//  Serial.println(botao);
   
   if (botao == 0) {
-//    Serial.println("Botão 0:");
-//    Serial.println(botao);
     digitalWrite(releRes, 0); //Desliga a Resistencia
     return;
   } 
-//  else if (botao == 1) {
-//    pausar = !pausar;
-//    Serial.println("Botão 1:");
-//    Serial.println(botao);
-//    //   delay(200);
-//  }
-
-//  while (pausar == 1) {
-//    Serial.println("Pausou");
-//    digitalWrite(releRes, 1); //Desliga a Resistencia
-////    digitalWrite(releAgua, 0);
-//    delay(200);
-//
-//    Serial.println("Botão Antes da checagem, dentro do while:");
-//    Serial.println(botao);
-//    
-//    botao = checaBotao();
-//    Serial.println("Botão depois da checagem, dentro do while:");
-//    Serial.println(botao);
-//    if (botao == 0) {
-//
-//       Serial.println("Botão 0, dentro do while:");
-//       Serial.println(botao);
-//      digitalWrite(releRes, 0); //Desliga a Resistencia
-// //     digitalWrite(releAgua, 0);
-//      return;
-//    } else if (botao == 1) {
-//       Serial.println("Botão 1, dentro do while:");
-//      Serial.println(botao);
-//      pausar = !pausar;
-//      digitalWrite(releRes, 1); //Desliga a Resistencia
-//    }
-//  }
   
    
    delay(130); //aguarda 1 Seg
@@ -1391,7 +1205,6 @@ void  preparaCafe(int temps)
   
   while(temps > -1){
     
-//  Serial.println(temps);
 
   sensors.requestTemperatures();
   float tempC = sensors.getTempCByIndex(0);
@@ -1399,68 +1212,21 @@ void  preparaCafe(int temps)
 
   botao = checaBotao();
    if (botao == 0) {
-//    Serial.println("Botão 0:");
-//    Serial.println(botao);
     digitalWrite(releRes, 0); //Desliga a Resistencia
     return;
   }
-  
-//   
-//   if (checaBotao()== 0)
-//  { 
-//    digitalWrite(releRes,0); //Desliga a Resistencia
-//    digitalWrite(releAgua,0);
-//    return;
-//    } else if (checaBotao()== 1)
-//    { 
-//    pausar = !pausar;
-// //   delay(200);
-//    }
-//  
-//
-//   while (pausar == 1){
-//    Serial.println("Pausou");
-//    delay(200);
-//    if (checaBotao()== 0)
-//      { 
-//    digitalWrite(releRes,0); //Desliga a Resistencia
-//    digitalWrite(releAgua,0);
-//    return;
-//    }    
-//    if (checaBotao()== 1)
-//                  { 
-//    pausar = !pausar; 
-//    }
-//   }
-
-
- 
-//  digitalWrite(releRes,1); //Liga Resistencia
-//  Serial.println("Ligou Resistencia");
-  
+    
   temps = temps - 1; 
-  
 
   delay(130);
   
-//  digitalWrite(releAgua,1); //Liga Aguá
-//  Serial.println("Ligou Bomba dágua");
-//
-//  if(tempAgua < 80){
-//      digitalWrite(releAgua,0);
-//       for (int i=0; i<5; i++){
-//        delay(1000); //aguarda 1 Seg
-//       }
-//      digitalWrite(releAgua,1);
-//    }
   }
-  
-  
   
    digitalWrite(releRes,0); //Desliga a Resistencia
    digitalWrite(releAgua,0);
    preparoApp = 0;
    statusMenu = 1;
+   digitalWrite(alexa, LOW);
    return;
    
   
@@ -1518,22 +1284,12 @@ int checaBotao(){
   
     if ((yc > 620) && (yc <1470)&& (zc > 400)) //verifica pause e cancela
                   {  
-//                      if ((xc > 590) && (xc <1640)) //verifica o hora +
-//                      {       
-//                              if( pausar == 0){
-//                                                pausar = 1;
-//                                            //    Serial.println(pausar);
-//                                                return 1;
-//                                }
-//                     
-//                          }
-//                          else if ((xc > 2100) && (xc <3360)) //verifica o minuto +
                         if ((xc > 2100) && (xc <3360)) //verifica o STOP
                           {  
                              statusMenu = 1;
                              preparoApp = 0;
                              mainMenu();
-                      //       Serial.println("STOP");
+                             digitalWrite(alexa, LOW);
                              delay (500);
                              return 0;
     
@@ -1543,47 +1299,150 @@ int checaBotao(){
                 
 }
 
-int criaAgendamento( uint8_t  diasAgendaf, uint8_t  horaAgendaf,  uint8_t  minutoAgendaf,  int  quantidadeAgendaf, int  tempoAgendaf, struct Agendamentos *a1t, struct Agendamentos *a2t, struct Agendamentos *a3t){
+int criaAgendamento( int  diasAgendaf, int  horaAgendaf,  int  minutoAgendaf,  int  quantidadeAgendaf, int  tempoAgendaf, struct Agendamentos *a1t, struct Agendamentos *a2t, struct Agendamentos *a3t){
+
+   Serial.println(minutoAgendaf);
+    Serial.println("");
 
    if (a1t->diasAgenda == 0 ){
       a1t->diasAgenda = diasAgendaf;
+      EEPROM.write(0, diasAgendaf);
+      Serial.println(diasAgendaf);
+      EEPROM.commit();
+    
       a1t->horaAgenda = horaAgendaf;
+      EEPROM.write(1, horaAgendaf);
+      Serial.println(horaAgendaf);
+      EEPROM.commit();
+      
       a1t->minutoAgenda = minutoAgendaf;
-      a1t->quantidadeAgenda = quantidadeAgendaf;
+      EEPROM.write(2, minutoAgendaf);
+      Serial.println(minutoAgendaf);
+      EEPROM.commit();
+
+      
       a1t->tempoAgenda = tempoAgendaf; 
+      if (tempoAgendaf == q200 ){
+        EEPROM.write(3, 1);
+        Serial.println(tempoAgendaf);
+        EEPROM.commit();
+      } else if (tempoAgendaf == q400 ){
+        EEPROM.write(3, 2);
+        Serial.println(tempoAgendaf);
+        EEPROM.commit();
+        }else if (tempoAgendaf == q600 ){
+        EEPROM.write(3, 3);
+        Serial.println(tempoAgendaf);
+        EEPROM.commit();
+          
+        }else if (tempoAgendaf == q800 ){
+        EEPROM.write(3, 4);
+        Serial.println(tempoAgendaf);
+        EEPROM.commit();
+        }
+      
+      
+      Serial.println(EEPROM.read(0));
+      Serial.println(EEPROM.read(1));
+      Serial.println(EEPROM.read(2));
+      Serial.println(EEPROM.read(3));
+      Serial.println(EEPROM.read(4));
 
       tft.fillScreen(TFT_WHITE);
       tft.setTextColor(TFT_BLACK);
       tft.setTextSize(2);
       tft.drawString("Agendamento Criado",40,120);
+      
       delay(3000);
+      mainMenu();
 
       return 0 ;
     }else if (a2t->diasAgenda == 0 ){
       a2t->diasAgenda = diasAgendaf;
+      EEPROM.write(5, diasAgendaf);
+      Serial.println(diasAgendaf);
+      EEPROM.commit();
+    
       a2t->horaAgenda = horaAgendaf;
+      EEPROM.write(6, horaAgendaf);
+      Serial.println(horaAgendaf);
+      EEPROM.commit();
+      
       a2t->minutoAgenda = minutoAgendaf;
-      a2t->quantidadeAgenda = quantidadeAgendaf;
+      EEPROM.write(7, minutoAgendaf);
+      Serial.println(minutoAgendaf);
+      EEPROM.commit();
+      
       a2t->tempoAgenda = tempoAgendaf; 
+      if (tempoAgendaf == q200 ){
+        EEPROM.write(8, 1);
+        Serial.println(tempoAgendaf);
+        EEPROM.commit();
+      } else if (tempoAgendaf == q400 ){
+        EEPROM.write(8, 2);
+        Serial.println(tempoAgendaf);
+        EEPROM.commit();
+        }else if (tempoAgendaf == q600 ){
+        EEPROM.write(8, 3);
+        Serial.println(tempoAgendaf);
+        EEPROM.commit();
+          
+        }else if (tempoAgendaf == q800 ){
+        EEPROM.write(8, 4);
+        Serial.println(tempoAgendaf);
+        EEPROM.commit();
+        }
+      
       tft.fillScreen(TFT_WHITE);
       tft.setTextColor(TFT_BLACK);
       tft.setTextSize(2);
       tft.drawString("Agendamento Criado",40,120);
       delay(3000);
+      mainMenu();
       return 0;
       
     }else if(a3t->diasAgenda == 0 ){
       a3t->diasAgenda = diasAgendaf;
+      EEPROM.write(10, diasAgendaf);
+      Serial.println(diasAgendaf);
+      EEPROM.commit();
+    
       a3t->horaAgenda = horaAgendaf;
+      EEPROM.write(11, horaAgendaf);
+      Serial.println(horaAgendaf);
+      EEPROM.commit();
+      
       a3t->minutoAgenda = minutoAgendaf;
-      a3t->quantidadeAgenda = quantidadeAgendaf;
+      EEPROM.write(12, minutoAgendaf);
+      Serial.println(minutoAgendaf);
+      EEPROM.commit();
+      
       a3t->tempoAgenda = tempoAgendaf; 
+      if (tempoAgendaf == q200 ){
+        EEPROM.write(13, 1);
+        Serial.println(tempoAgendaf);
+        EEPROM.commit();
+      } else if (tempoAgendaf == q400 ){
+        EEPROM.write(13, 2);
+        Serial.println(tempoAgendaf);
+        EEPROM.commit();
+        }else if (tempoAgendaf == q600 ){
+        EEPROM.write(13, 3);
+        Serial.println(tempoAgendaf);
+        EEPROM.commit();
+          
+        }else if (tempoAgendaf == q800 ){
+        EEPROM.write(13, 4);
+        Serial.println(tempoAgendaf);
+        EEPROM.commit();
+        }
 
       tft.fillScreen(TFT_WHITE);
       tft.setTextColor(TFT_BLACK);
       tft.setTextSize(2);
       tft.drawString("Agendamento Criado",50,120);
       delay(3000);
+      mainMenu();
       
       return 0;
     }
@@ -1614,18 +1473,9 @@ int verificaAlarme(struct Agendamentos a1t, struct Agendamentos a2t, struct Agen
 
   
   if (a1t.diasAgenda != 0) {
-//    Serial.println("Tem agendamento");
-    if (a1t.diasAgenda == dia || a1t.diasAgenda == finde) {
-//        Serial.println("É o dia");
-//        Serial.println(a1t.horaAgenda);
-//        Serial.println(horaNowf);
-//        Serial.println(a1t.minutoAgenda);
-//        Serial.println(minuteNowf);
-        
+    if (a1t.diasAgenda == dia || a1t.diasAgenda == finde) {  
       if (a1t.horaAgenda == horaNowf) {
-//         Serial.println("É a hora");
         if (a1t.minutoAgenda == minuteNowf) {
-//           Serial.println("É o minuto");
           return 1;
         }
       }
@@ -1645,9 +1495,7 @@ int verificaAlarme(struct Agendamentos a1t, struct Agendamentos a2t, struct Agen
   } 
   
   if (a3t.diasAgenda != 0) {
-
     if (a3t.diasAgenda == dia || a3t.diasAgenda == finde) {
-
       if (a3t.horaAgenda == horaNowf) 
         if (a3t.minutoAgenda == minuteNowf) {
           return 3;
@@ -1749,8 +1597,6 @@ String retornaAgendamentoApp (struct Agendamentos a1a, struct Agendamentos a2a, 
  
   return agendaApp;
   }
-
-
 
 
 
